@@ -50,7 +50,7 @@ php2go는 다음 과정을 지향합니다.
 
 현재 PHP 분석, 계약 추출, fixture 수집, SQL 추출, Go 구현, 동등성 검증, 보안 검토를 위한 7개 기본 Skill과 [virtual-patch Skill](skills/virtual-patch/SKILL.md), 총 **8개 Agent Skill**을 제공합니다.
 
-검증 CLI와 자동 수집·추출 도구, 프록시 실행 프로그램은 아직 개발 전입니다.
+검증 CLI와 자동 수집·추출 도구, 프록시 실행 프로그램은 계발 예정입니다.
 
 자세한 작업 지침은 [AGENTS.md](AGENTS.md)와 [skills/](skills/)에서 확인할 수 있습니다.
 
