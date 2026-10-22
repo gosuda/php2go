@@ -9,9 +9,10 @@ Implement feature by feature using the original source, feature inventory, contr
 
 ## Implementation Criteria
 
-- Build the database layer with SQL-first + sqlc. Call methods generated from `.sql` files and pinned sqlc configuration using the original SQL Inventory and actual schema. Prepare missing extraction artifacts first; do not handwrite or edit generated code.
-- Prohibit SQL string construction and direct `Query*`/`Exec*`/`Prepare*` calls in application code. Infrastructure handles connections, pools, health checks, and begin/commit/rollback; bind transactional queries through `WithTx`. Schema application, fixture restoration, and observation tools sit outside this application boundary.
-- Handle dynamic conditions, sorting, and table names with finite static SQL and allowlist dispatch. Do not bind arbitrary identifiers or introduce raw SQL fallbacks. Report behavior that cannot be represented with sqlc as `UNSUPPORTED`.
+- Build the initial database layer with SQL-first + `database/sql` and a pinned driver. Preserve existing schema, table names, and SQL semantics; defer optimization and schema redesign until equivalence is established. Do not require sqlc or introduce an ORM. Consider sqlx only when repetitive result mapping creates a concrete need, with separate verification.
+- Keep static queries in `.sql` files available to deployed builds and dynamic construction in focused Go database access code. Use context-aware `QueryContext`, `QueryRowContext`, and `ExecContext` with bound values. Map `Scan` targets, NULL, numeric/time conversions, `sql.ErrNoRows`, affected rows, and generated IDs explicitly; close rows and check `rows.Err()`.
+- Build dynamic conditions from fixed SQL fragments and argument lists. Resolve table/column names and sort direction through trusted validated allowlists; never concatenate request data. Support dynamic board tables through the authoritative server-managed registry, including authorized creation and registry refresh. Do not require per-table code generation or mark dynamic queries unsupported merely because sqlc cannot represent them.
+- Keep transactional statements on the same `*sql.Tx` and preserve order, isolation, rollback, and connection-local semantics. Infrastructure handles connection pools and lifecycle; schema application, fixture restoration, and observation tooling remain separate.
 - Match request parsing, routing/rewrites, status/headers/body, errors, and redirects to the contract. Do not assume Go defaults match PHP missing/null/empty values, loose comparisons, truthiness, numeric strings, arrays, or encoding semantics.
 - Preserve transactions/rollback, NULL/types, sorting and tie handling, auto-increment IDs, and reference relationships. Do not rely on driver result order or default timezone.
 - Preserve observable session IDs, cookie attributes, authentication/authorization, CSRF behavior, file paths/permissions, and external effects. Specify compatibility boundaries with existing stores when needed.
@@ -20,7 +21,7 @@ Implement feature by feature using the original source, feature inventory, contr
 
 ## Revision Loop
 
-1. Run `sqlc generate` with the pinned version, verify reproducible generation, and run Go builds/tests for a small feature boundary. If sqlc is unavailable, disclose that generation was not run rather than claiming success.
+1. Run Go builds/tests for a small feature boundary. Verify static SQL availability, placeholder arguments, identifier allowlists, result mapping, and transaction behavior with the pinned driver and recorded database settings. Disclose unavailable checks without claiming success.
 2. Compare against independent clones of the same snapshot using an executable verifier when available. Otherwise report verification as not run.
 3. Narrow diffs to input interpretation, responses, state transitions, or environment differences, then revise Go. Do not erase differences by changing the original or expected values.
 4. Rerun affected scenarios and related regression paths. If the same cause repeats without progress, document missing information and unresolved differences and continue other implementable work.

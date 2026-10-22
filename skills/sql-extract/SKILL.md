@@ -1,27 +1,29 @@
 ---
 name: sql-extract
-description: Extract embedded SQL and actual schemas from PHP, bind values, and separate static queries to prepare a sqlc-generated database layer for migration to Go.
+description: Extract PHP SQL and existing schemas, separate static queries from safe dynamic construction, and define explicit database/sql result mapping for migration to Go.
 ---
 
-# SQL Extraction and sqlc Generation
+# SQL Extraction and Database Access
 
-Use SQL files as the authority for target application database queries and call sqlc-generated methods from Go. Apply the dynamic SQL handling, configuration examples, and verification criteria in [references/sqlc-policy.md](references/sqlc-policy.md).
+Use SQL-first + `database/sql` as the initial default. Keep static SQL in files and dynamic SQL in minimal Go construction code. Apply the schema preservation, binding, identifier handling, result mapping, and verification rules in [references/database-policy.md](references/database-policy.md).
 
 ## Procedure
 
 1. Obtain the original revision and actual database schema. Record PHP wrappers, all SQL call sites, string construction branches, dynamic identifiers, database functions/triggers/procedures/DDL, and transaction boundaries in the SQL Inventory. Supplement branches unresolved by static analysis with isolated runtime observations and disclose remaining gaps.
-2. Reconcile the deployed schema with original migrations and select `db/schema.sql` or a schema migration directory. Separate it from data fixtures and record database version, charset/collation, sql_mode, timezone, and NULL/unsigned/decimal/zero-date semantics. Do not silently simplify schemas to satisfy sqlc.
-3. Extract SQL into `db/queries/*.sql` and assign query names and cardinality annotations. Bind user values while preserving original filters, sorting/ties, LIMIT, errors, and result consumption. Deduplicate only when transaction and call semantics match.
-4. Separate dynamic WHERE/ORDER BY/table names into finite static queries and dispatch. Record the identifiers generated at build time and their provenance. Explicitly report unrepresentable behavior as `UNSUPPORTED` rather than bypassing sqlc with application raw SQL.
-5. Specify engine, schema/query paths, Go output/package, and required type overrides in `sqlc.yaml`. Pin sqlc and Go driver versions and inspect actual generated types after `sqlc generate`. Do not directly edit generated Go files.
-6. Verify identical regeneration, build the target Go code, and perform database integration verification. Compare against the original using independent clones of the same snapshot. Record verification as not run when tools or the database are unavailable.
+2. Reconcile the deployed schema with original migrations and record the existing schema in `db/schema.sql` or the established migration directory. Separate it from data fixtures and record database version, charset/collation, sql_mode, timezone, and NULL/unsigned/decimal/zero-date semantics. Preserve schema and table names during initial migration; defer schema redesign and query optimization until equivalence is established.
+3. Extract static SQL into `db/queries/*.sql` with stable inventory IDs and a deployment loading strategy. Preserve filters, sorting/ties, LIMIT, errors, and result consumption. Deduplicate only when transaction and call semantics match. SQL annotations and generated query methods are not required.
+4. Extract dynamic WHERE/ORDER BY/table construction into small Go functions. Keep values in placeholder argument lists and identifiers/directions in validated trusted allowlists. Record the authoritative registry and refresh rules for runtime board tables; do not insert request strings or require per-table generation.
+5. Define context-aware `database/sql` calls, parameter order, explicit `Scan` targets, NULL/type conversions, no-row handling, row cleanup, iteration errors, affected rows, and generated IDs. Pin the driver and record connection settings and transaction/connection affinity. No sqlc configuration or ORM is required.
+6. Build the target Go code and perform database integration verification. Compare against the original using independent clones of the same snapshot, including dynamic branches and mapping boundaries. Record verification as not run when tools or the database are unavailable. Report genuine execution/observation limitations without treating lack of code generator support as unsupported application behavior.
 
 ## Deliverables and Boundaries
 
-- SQL Inventory: original file/symbol/location/branch to feature/contract, schema/query name, generated method, and verification scenario.
-- Schemas and queries, sqlc configuration, tool versions, generation/build results, and static SQL generation scripts and input lists when needed.
+- SQL Inventory: original file/symbol/location/branch to feature/contract, schema/static query or dynamic construction, Go access function, result mapping, and verification scenario.
+- Existing schema and static SQL files, dynamic construction and allowlist plan, loading/embedding strategy, mapping and transaction plan, driver/settings, and build/integration results.
 - Unresolved dynamic SQL, unsupported syntax, extraction/execution gaps, security change proposals, and verification limits.
 
-Infrastructure handles connections, pools, health checks, and begin/commit/rollback; transactional queries use generated methods. DDL application, restoration, and observation tools are separate. Do not move business queries into infrastructure as a way to execute them directly.
+Keep SQL execution in focused database access functions using `database/sql`. Execute transactional queries on the same `*sql.Tx` and preserve original order, isolation, and rollback behavior. DDL application, restoration, and observation tools remain separate; do not assume MySQL DDL rolls back with ordinary writes.
 
-Record security changes when parameterization removes original SQL injection risks. Treat input policy changes, such as returning a new HTTP 400 for integer parsing failures, separately. SQL generation or type checking alone does not establish functional equivalence PASS.
+Do not introduce an ORM or mandatory sqlc generation in the initial migration. Consider sqlx only for demonstrated repetitive mapping, with its mapping behavior verified separately. Do not mix libraries by default.
+
+Record security changes when parameterization removes original SQL injection risks. Treat input policy changes, such as returning a new HTTP 400 for integer parsing failures, separately. Successful SQL execution or type checking alone does not establish functional equivalence PASS.

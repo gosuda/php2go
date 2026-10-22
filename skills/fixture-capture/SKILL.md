@@ -13,7 +13,7 @@ Take a Behavior Contract and an executable original application as inputs. If ca
 2. Prepare sanitized test database, file tree, session store, and external service doubles as an initial snapshot and record its digest. Do not replay writes against production.
 3. Verify that workers, jobs, mail, queues, and external APIs use recording doubles in the isolated environment. Define completion conditions and timeouts for asynchronous effects. Failed initialization or dependencies outside the doubles invalidate the affected capture.
 4. Control clock/timezone/locale, RNG, sequence starting values, and ordering rules. For values that cannot be injected, retain raw values and observed relationships and link them to narrowly scoped contract comparison rules.
-5. Distinguish DDL/schema hashes from data snapshots. Record database version, charset/collation, sql_mode, timezone, triggers/procedures, and storage engine. A sqlc schema file alone does not restore data or database runtime semantics.
+5. Distinguish DDL/schema hashes from data snapshots. Record database version, charset/collation, sql_mode, timezone, triggers/procedures, storage engine, and candidate driver/connection settings. A schema file alone does not restore data or database runtime semantics. Include the authoritative table registry and its update behavior for dynamic board tables.
 
 ## Capture
 

@@ -15,7 +15,7 @@ Executable verification tools determine verdicts. The Agent prepares execution, 
 4. Execute the same request sequence per scenario. For dynamic tokens and IDs, use each execution's values according to declared extraction/binding rules and check logical request meaning and value relationships. Do not hide failures with arbitrary retries.
 5. Capture raw values and deltas for all required channels. Apply only declared normalization and comparators and execute each invariant's actual assertion. Do not replace missing observations with empty values or `none`.
 6. Package machine-readable results, diffs, raw evidence, and coverage produced by the verifier. After changes, reverify affected scenarios against the new candidate revision.
-7. Map each SQL Inventory site/branch to `.sql` queries, generated methods, and scenarios. Include schema/query/config hashes, sqlc version, and generation reproducibility evidence. Generation success does not establish database equivalence PASS. Compare empty results, NULL, numeric conversions, ordering, affected rows, generated IDs, rollback, and dynamic table dispatch within the relevant contract scope.
+7. Map each SQL Inventory site/branch to static SQL or dynamic construction, its Go access function, result mapping, and scenarios. Include schema/query/construction hashes, driver version, and connection settings. Successful query execution does not establish database equivalence PASS. Compare empty results, NULL, numeric/time conversions, ordering, affected rows, generated IDs, statement order, transaction rollback/isolation, and dynamic table registry/authorization behavior within the contract scope. Verify invalid identifiers are rejected and bound values remain data rather than SQL.
 
 ## Verdict Boundaries
 
