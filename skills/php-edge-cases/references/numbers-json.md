@@ -2,7 +2,15 @@
 
 ## Float to String
 
-PHP converts floats to strings with the `precision` setting (default 14 significant digits) in `echo`, string concatenation, `(string)`, `strval`, and `sprintf('%s')`. `var_export`, `json_encode`, and `serialize` use `serialize_precision`, which defaults to 17 on 5.6 and to `-1` (shortest round-trip) on 7.1+.
+PHP converts floats to strings with the `precision` setting (default 14 significant digits) in `echo`, string concatenation, `(string)`, `strval`, and `sprintf('%s')`. Which setting other serializers use depends on the version:
+
+| Function | 5.6 and 7.0 | 7.1+ |
+| --- | --- | --- |
+| `echo`, `(string)`, `strval` | `precision` (default 14) | `precision` (default 14) |
+| `json_encode` | `precision` (default 14) | `serialize_precision` (default `-1`) |
+| `var_export`, `serialize` | `serialize_precision` (default 17) | `serialize_precision` (default `-1`) |
+
+`-1` means the shortest string that round-trips. **Observed on 5.6:** `json_encode(0.1 + 0.2)` gave `0.3` by default and `0.30000000000000004` with `-d precision=17`, while `-d serialize_precision=-1` had no effect on it. **Documented:** the `json_encode` switch to `serialize_precision` and the `-1` default were introduced in 7.1; 7.0 was not probed.
 
 **Observed:**
 
@@ -21,7 +29,7 @@ PHP converts floats to strings with the `precision` setting (default 14 signific
 
 - Go's `fmt.Println(a + b)` with runtime float values prints `0.30000000000000004`, and `strconv.FormatFloat(f, 'f', -1, 64)` never uses exponent notation. Neither matches PHP `echo` output.
 - PHP uses exponent notation at 1e15 and above, and for small values, with the `1.0E+15` mantissa format.
-- 5.6 `json_encode` uses `precision` (14) unless `serialize_precision` is changed, so 5.6 JSON output differs from 7.1+ for most non-trivial floats.
+- 5.6 and 7.0 `json_encode` output follows `precision`, so it differs from 7.1+ for most non-trivial floats, and changing `precision` on those versions changes JSON output too.
 - `setlocale(LC_NUMERIC, ...)` before 8.0 can make `(string)1.5` output `1,5`. 8.0+ is locale-independent.
 
 **Find:** `echo` or concatenation with computed floats (averages, ratings, percentages, money), `round(` results that are printed, `ini_set('precision'`, and `ini_set('serialize_precision'`.

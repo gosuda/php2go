@@ -33,17 +33,39 @@ PHP parses query strings, form bodies, cookies, and uploads into superglobals be
 - `arg_separator.input` changes the separator set (for example `&;`).
 - `max_input_vars` (default 1000, 5.3.9+) silently drops variables beyond the limit with a warning. Large forms such as bulk-edit pages hit this limit.
 
-**Go:** Implement a `phpParseQuery(raw string) orderedValue` and reuse it for query, `application/x-www-form-urlencoded` bodies, and cookies. Test it against `parse_str` output from the reference version, including the cases above.
+**Go:** Implement a `phpParseQuery(raw string) orderedValue` for query strings and `application/x-www-form-urlencoded` bodies. Test it against `parse_str` output from the reference version, including the cases above. Do not reuse it for cookies; see [Cookies](#cookies).
 
 ## Superglobal Merging and Bodies
 
 **Observed (built-in server, `-n`):**
 
 - `$_REQUEST` follows `request_order`, or `variables_order` when `request_order` is empty (default `GPC`). With `?k=get`, body `k=post`, and cookie `k=cookie`, `$_REQUEST['k']` was `"cookie"`. Production `php.ini` files usually set `request_order = "GP"`, which excludes cookies. Read the deployed value.
-- Repeated cookie names (`a.b=1; a.b=2`) keep the first value (`a_b => "1"`), the opposite of query parameters. Cookie names also have `.` and space replaced with `_`.
 - JSON bodies are not parsed into `$_POST`. Code reads `php://input`. `$_POST` is filled only for `application/x-www-form-urlencoded` and `multipart/form-data`.
 - `post_max_size` exceeded: `$_POST` and `$_FILES` are empty, with a warning. `upload_max_filesize` exceeded: the file entry has `error => UPLOAD_ERR_INI_SIZE`.
 - `$_SERVER['QUERY_STRING']` and `REQUEST_URI` keep the raw form, so code that reparses them behaves differently from code that uses `$_GET`.
+
+## Cookies
+
+`$_COOKIE` shares the bracket and name-mangling rules of the query parser but differs in duplicate handling, separators, and decoding. A cookie parser that reuses query semantics can pick a different session ID or authentication token than PHP when a client sends the same name twice, for example from cookies set on different paths or domains.
+
+**Observed (built-in server):**
+
+| `Cookie` header | 5.6 | 7.4 / 8.4 |
+| --- | --- | --- |
+| `k=cookie; a.b=1; a.b=2` | `a_b => "1"` (first wins) | same |
+| `p=a+b%20c` | `p => "a b c"` | `p => "a+b c"` (`+` is literal) |
+| `q[x]=1; q[]=2` | `q => ["x" => "1", 0 => "2"]` | same |
+| `q[x]=1; q[x]=2; q[]=a; q[]=b` | `q => ["x" => "2", 0 => "a", 1 => "b"]` (last wins inside brackets) | same |
+| `r=1, s=2` | `r => "1, s=2"` (`,` is not a separator) | same |
+| `t = 3 ` | key `t_`, value `" 3 "` | same |
+| `u=%zz` | `u => "%zz"` | same |
+
+- Duplicate top-level names: the **first** value wins in `$_COOKIE`, while the **last** value wins in `$_GET` and `$_POST`. Duplicate bracketed keys such as `q[x]` behave like the query parser: the last value wins, and `q[]` appends.
+- Only `;` separates cookies. Leading whitespace before a name is skipped; trailing whitespace in the name becomes `_`, and whitespace around the value is kept.
+- 7.x and 8.x decode `%XX` but keep `+`. 5.6 also decodes `+` as a space.
+- Go's `http.Request.Cookies()` (checked with Go 1.24.4) returns every duplicate in header order, does not mangle or percent-decode, does not build arrays, and drops pairs it considers invalid: `q[x]=1` was dropped, `t = 3 ` became name `t` with value `" 3"`, and `p=a+b%20c` stayed raw. `Request.Cookie(name)` returns the first match, which agrees with PHP only for plain names without brackets, dots, or spaces.
+
+**Go:** Implement a separate `phpParseCookies(header string) orderedValue` with first-wins semantics for top-level names, last-wins semantics inside brackets, and the reference version's decoding, sharing only the name-mangling and bracket logic with `phpParseQuery`. Read the session cookie through this function, or verify that the session name cannot be mangled or duplicated. Add scenarios with duplicate session cookies and `+` in values.
 
 ## Uploads
 
