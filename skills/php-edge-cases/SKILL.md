@@ -22,7 +22,7 @@ Treat this catalog as a guide to what to check, not as evidence about a particul
 2. Run the probes with the reference binary and configuration. They ship in `scripts/` when this Skill is packaged on its own; a copy of this catalog bundled into another Skill package contains only the documents. Use `scripts/run-probes.sh PHP_BIN OUT_DIR` for engine behavior and `scripts/run-request-probe.sh PHP_BIN [PORT]` for request parsing, headers, output, and sessions through the built-in server. Set `PHP_PROBE_ARGS="-c /path/to/php.ini"` to apply the deployed configuration. Keep the outputs with the analysis evidence. Probe outputs are about the runtime, not the application.
 3. For each reference topic, search the source for the listed patterns. Record file and line, the affected feature, and whether the input can reach the divergent case.
 4. Add a scenario for each reachable divergence. Prefer inputs that separate behaviors, such as `"abc"` against `0`, `a[]=1&a[]=2`, invalid UTF-8, `0.1+0.2`, and `2024-02-30`.
-5. Implement the PHP semantics explicitly in Go helpers with narrow names, such as `phpIntval`, `phpLooseEquals`, and `phpJSONEncode`. Test those helpers against probe outputs from the reference version. Do not spread PHP compatibility logic across handlers.
+5. Implement reachable divergences under the go-migrate [PHP compatibility boundary](../go-migrate/SKILL.md#php-compatibility-boundary) rules, using probe outputs and fixtures from the reference version as the expected values in tests.
 6. When a divergence is an original bug or a security risk, keep the original behavior in the contract and propose the change through a security or change record. Do not fix it silently during translation.
 
 ## Reference Topics
@@ -43,7 +43,6 @@ Every entry names the PHP versions it applies to. Entries are labeled **Observed
 
 ## Boundaries
 
-- Do not build a general PHP runtime in Go. Reproduce only the semantics that reachable features observably depend on, and keep the rest out of scope with a recorded reason.
 - Probes reflect specific builds. Minor versions, distribution patches, `php.ini`, extensions (for example `mbstring.func_overload`), and SAPI can change results. Rerun them on the reference runtime instead of trusting the labels in this Skill.
 - Matching a catalog entry is an analysis lead, not a finding. Use executable comparisons to determine equivalence.
 - Do not copy probe output from production systems that contains secrets or personal data. The probes print runtime configuration and request data that you supply.

@@ -21,6 +21,7 @@ Edit each rule in its owning document. Other documents should link to the owner 
 | Execution tool selection, validity, artifact reuse/invalidation, verdicts/aggregation, coverage, security changes | [Evidence Protocol](skills/equivalence-check/references/evidence-protocol.md) |
 | Proxy capability planning, production readiness, patch lifecycle and PHP retirement | [Virtual Patch Plan](skills/virtual-patch/references/patch-plan.md) |
 | Version-dependent PHP runtime semantics that diverge from Go defaults, with detection patterns and boundary inputs | [PHP semantics catalog](skills/php-edge-cases/SKILL.md) |
+| Placement, consolidation, scope, and evidence of PHP compatibility code in Go | [PHP compatibility boundary](skills/go-migrate/SKILL.md#php-compatibility-boundary) |
 
 Read the relevant owner before work in that area. These references are instructions and design formats, not implemented schemas or verification tools. If a procedure conflicts with its owner, correct the procedure instead of introducing a second policy.
 
