@@ -1,11 +1,11 @@
 ---
 name: fixture-capture
-description: Capture reproducible request sequences, responses, and database, session, and file effects by running the original PHP application from isolated initial state.
+description: Capture reproducible request sequences, responses, and database, session, and file effects by running the original PHP application from isolated initial state. Use when recording reference fixtures for a Behavior Contract.
 ---
 
 # Reference Fixture Capture
 
-Take a Behavior Contract and an executable original application as inputs. Read the [Evidence Protocol](../equivalence-check/references/evidence-protocol.md) for execution validity and evidence retention and the [Behavior Contract](../behavior-extract/references/behavior-contract.md) for baseline and normalization rules.
+Take a Behavior Contract and an executable original application as inputs. Read the [Evidence Protocol](../equivalence-check/references/evidence-protocol.md) for execution validity and evidence retention, the [Behavior Contract](../behavior-extract/references/behavior-contract.md) for baseline and normalization rules, and the [capture manifest format](references/capture-manifest.md) for the snapshot layout and manifest fields.
 
 Check existing fixtures under the Evidence Protocol's artifact reuse rules first. Capture only missing scenarios or stale observations unless a fresh capture is explicitly requested; a Go implementation change alone does not require recapturing PHP.
 
@@ -28,7 +28,7 @@ Select existing capture tools or prepare minimal target-project capture scripts 
 
 ## Deliverables
 
-Include the fixture ID, contract/source/tool versions and hashes, snapshot and restoration procedure, runtime profile, scenario and step IDs, raw artifact paths/hashes, capture success per channel, and repeatability results in the Capture Manifest. Retain raw artifacts even when normalized results are also available.
+Include the fixture ID, contract/source/tool versions and hashes, snapshot and restoration procedure, runtime profile, scenario and step IDs, raw artifact paths/hashes, capture success per channel, and repeatability results in the Capture Manifest, following its format. Retain raw artifacts even when normalized results are also available.
 
 Capture synthetic data instead of authentication tokens and personal information. Restrict access to sensitive comparison artifacts and use safe references in reports. Disclose limits when redaction removes information needed for reproduction or comparison.
 

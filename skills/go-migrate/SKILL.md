@@ -1,6 +1,6 @@
 ---
 name: go-migrate
-description: Implement Go code that preserves observable PHP behavior using Behavior Contracts and fixtures, and revise it based on execution diffs.
+description: Implement Go code that preserves observable PHP behavior using Behavior Contracts and fixtures, and revise it based on execution diffs. Use when writing or fixing a Go candidate for a feature that has a contract.
 ---
 
 # Go Implementation

@@ -1,11 +1,11 @@
 ---
 name: php-analyze
-description: Analyze a PHP application's entry points, dependencies, global state, and observable feature boundaries before migrating it to Go.
+description: Analyze a PHP application's entry points, dependencies, global state, and observable feature boundaries before migrating it to Go. Use when starting a migration or inventorying routes, includes, and SQL call sites for a feature.
 ---
 
 # PHP Analysis
 
-Extract a feature inventory and runtime prerequisites without modifying the original source. Analysis provides input for contracts and scenarios; it does not prove equivalence.
+Extract a feature inventory and runtime prerequisites without modifying the original source. Analysis provides input for contracts and scenarios; it does not prove equivalence. Record the Feature Inventory and SQL Inventory in the shapes defined by the [inventory format](references/inventory-format.md), using the [workspace convention](../migration-orchestrator/references/workspace-convention.md) for identifiers and locations.
 
 For incremental work, scope analysis to the selected feature and its reachable shared dependencies. Check the [artifact reuse rules](../equivalence-check/references/evidence-protocol.md#artifact-reuse), update the existing inventory, and broaden analysis only when missing evidence or uncertain shared impact requires it.
 
@@ -24,6 +24,7 @@ Include the following in the Analysis Report:
 
 - Source revision, analysis scope, runtime environment, and dependencies needed for reproduction.
 - Feature Inventory: feature ID, entry point, source location, inputs, state reads/writes, external effects, and authorization boundaries.
+- SQL Inventory: wrapper functions, call sites with stable site IDs, dynamic table/clause patterns, and transaction scopes.
 - Evidence: file, symbol, and configuration locations, with execution records where available.
 - Unexamined areas and reasons, such as dynamic includes, encrypted source, or missing extensions and services.
 - Next steps per feature: contract extraction readiness, required fixtures, and execution/observation adapters.

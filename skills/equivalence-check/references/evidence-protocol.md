@@ -79,6 +79,34 @@ When raw values contain secrets, include restricted artifact references and safe
 
 Record change ID, original evidence, risk, affected input/output/state scope, approver and approval evidence/timestamp, related contracts/scenarios/diffs, and regression verification. Approved differences remain `MISMATCH`. Separate release acceptance from functional equivalence verdicts and do not describe changes as approved without approval records.
 
+A record starts as `PROPOSED` and has no `approval` block until a human approver's evidence exists; an Agent never supplies an approver or approval timestamp. Do not edit the original fixtures or rewrite the baseline contract so that a fix appears identical to the vulnerable behavior. Every record names normal-input scenarios that must keep passing with no difference. The ID pattern and file location come from the [workspace convention](../../migration-orchestrator/references/workspace-convention.md#identifiers).
+
+The following values are illustrative and the field names are not an executable schema:
+
+```yaml
+change_id: SEC-2026-001
+status: APPROVED                # PROPOSED | APPROVED | REJECTED
+feature: board.read
+risk: {type: "CWE-89 SQL injection", severity: critical}
+original_evidence:
+  source_location: bbs/board.php:54
+  description: Request values are interpolated directly into the SQL string.
+  reproduced_in_isolated_env: true
+  reproduction_scenario: sqli-boolean-probe
+intentional_difference:
+  input_scope: bo_table outside the registry, or stx containing SQL metacharacters
+  php_reference_behavior: Executes the injected fragment or prints a database error (HTTP 200).
+  go_candidate_behavior: Binds stx as a value (empty result, HTTP 200); rejects an unknown bo_table with the standard not-found alert.
+affected:
+  divergence_scenarios: [sqli-boolean-probe, unknown-table-injection]
+  expected_verdict: MISMATCH
+  regression_pass_scenarios: [public-page-2, search-normal-keyword, empty-search-result]
+approval:                       # omit while PROPOSED
+  approved_by: <approver identity>
+  approved_at: <timestamp>
+  reference: <ticket or review link>
+```
+
 ## Determinism Boundaries
 
 Identical input artifacts and comparator versions must produce identical verdicts. Record unstable repeated reference executions and control clock/RNG/concurrency/external dependencies. Apply only the comparison and normalization declarations permitted by the Behavior Contract.

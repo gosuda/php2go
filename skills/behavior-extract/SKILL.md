@@ -1,11 +1,11 @@
 ---
 name: behavior-extract
-description: Extract Behavior Contracts and success, boundary, failure, and authorization scenarios from observable PHP behavior for migration to Go.
+description: Extract Behavior Contracts and success, boundary, failure, and authorization scenarios from observable PHP behavior for migration to Go. Use when defining the executable verification criteria for a feature, normally after analysis.
 ---
 
 # Behavior Contract Extraction
 
-Use analysis findings and observations of the original application to establish criteria independent of the candidate implementation. Read [references/behavior-contract.md](references/behavior-contract.md), which owns contract fields, comparison declarations, baseline management, and examples.
+Use analysis findings and observations of the original application to establish criteria independent of the candidate implementation. Read [references/behavior-contract.md](references/behavior-contract.md), which owns contract fields, comparison declarations, baseline management, and examples. Name features, scenarios, and snapshots and store contracts per the [workspace convention](../migration-orchestrator/references/workspace-convention.md).
 
 Work on the selected feature's missing or changed declarations. Reuse valid analysis and existing contracts under the [artifact reuse rules](../equivalence-check/references/evidence-protocol.md#artifact-reuse) rather than rebuilding all contracts.
 
