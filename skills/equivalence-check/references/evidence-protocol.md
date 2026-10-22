@@ -1,8 +1,37 @@
 # Evidence Protocol Draft v0
 
-These rules are intended for the verification CLI and adapters. This repository currently provides no runner, comparators, or machine-validation schemas.
+These rules apply to executable checks assembled for the target project. A repository-owned verifier CLI, adapter framework, or machine-validation schema is not required.
 
-This document owns execution validity, verdicts, aggregation, coverage, evidence retention, and security change records. [Behavior Contract](../../behavior-extract/references/behavior-contract.md) owns baseline management and declared comparison/normalization semantics; [database policy](../../sql-extract/references/database-policy.md) owns DB implementation requirements.
+This document owns execution tool selection, artifact reuse, execution validity, verdicts, aggregation, coverage, evidence retention, and security change records. [Behavior Contract](../../behavior-extract/references/behavior-contract.md) owns baseline management and declared comparison/normalization semantics; [database policy](../../sql-extract/references/database-policy.md) owns DB implementation requirements.
+
+## Execution Tools
+
+Use the target project's existing test runners, HTTP clients, database tools, and isolation facilities where they meet the contract. The Agent may combine them or write minimal capture, assertion, comparison, and report scripts in that project. A dedicated `equiv` CLI is neither required nor assumed to exist.
+
+Turn missing capture or comparison capabilities into concrete target tasks. Prefer extending an existing test or adding a focused adapter over building a general harness. The absence of a named CLI does not itself make a feature unsupported. If execution remains impossible because a runtime, service, access, or observation capability is unavailable, record the actual limitation under this protocol.
+
+Express comparisons and assertions as executable checks with explicit rules. The Agent can author and explain those checks but must not replace their results with an AI judgment of equivalence. Capture raw observations, check process failures, and distinguish mismatches from setup/capture failures. If existing tools only return assertion results, assemble the required evidence report from those outputs using a reproducible mapping to this protocol's statuses.
+
+Validate new comparison logic with a known matching case and deliberate response/state differences relevant to its scope. Check that required missing observations cannot accidentally PASS. Pin tool versions and script contents/hashes, retain commands and assertion output, and record what was actually observed. Manually inspecting two responses is advisory, not a substitute for executable checks.
+
+Use project-specific scripts first. Promote repeated, proven mechanics into shared tooling only when real migrations justify it; the shared tooling is an optimization, not a prerequisite for verification.
+
+## Artifact Reuse
+
+Before invoking a task, locate existing artifacts for the selected feature and check their recorded provenance and dependencies. Reuse valid inputs instead of rerunning the entire Skill collection. An artifact's existence alone does not make it valid.
+
+| Artifact | Dependencies to check before reuse |
+| --- | --- |
+| Analysis / SQL access plan | Original source revision and relevant files, schema/configuration, dependency versions, and feature scope |
+| Behavior Contract | Original evidence and revision, contract revision, feature boundaries, and declared scenarios/comparisons |
+| Reference fixtures | Original revision, contract hash, initial snapshot, runtime/settings, capture version, observation completeness, and stability |
+| Comparison evidence | All recorded run inputs, including candidate revision/content hashes, comparator/assertion versions, and required observation scope |
+
+Mark changed, missing, or unverifiable dependencies as stale and record affected features/scenarios. Rebuild or recapture the affected artifacts and rerun affected comparisons. Changes to shared schema, authentication/session behavior, bootstrap code, or runtime settings may invalidate several features; broaden the scope when impact cannot be bounded. Keep unaffected valid artifacts and historical versions.
+
+A Go-only implementation change does not by itself invalidate unchanged PHP analysis or reference fixtures, but it does require new comparison evidence for affected candidate behavior. Never relabel an older PASS as verification of a changed candidate. New scenarios need new observations rather than being inferred from existing coverage. Follow the Behavior Contract's baseline rules for actual source, contract, or initial-state revisions.
+
+Record reused artifact IDs/hashes, dependency checks, invalidation reasons, and the selected verification scope. This policy defines validity decisions; it does not imply that an artifact cache or invalidation engine is implemented.
 
 ## Verdict Boundary
 

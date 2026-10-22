@@ -2,11 +2,13 @@
 
 ## Purpose and Current Scope
 
-php2go provides eight Agent Skills for PHP-to-Go migration: seven core migration Skills and `virtual-patch` for temporary defenses during staged migration. Skills guide the Agent; executable tools determine equivalence.
+php2go provides eight task-specific Agent Skills for PHP-to-Go migration. They are a toolbox selected per feature, not eight mandatory stages. `virtual-patch` is optional and applies only when an identified risk needs interim mitigation. Skills guide the Agent; executable tools determine equivalence.
 
-The repository contains Skills, policy/format references, and a standalone Skill packager. It does not yet implement the `equiv` CLI, capture tools, automatic SQL extraction, target application code, a proxy binary, execution adapters, or machine-validation schemas. Do not describe planned capabilities as available.
+The repository is a Skills-first collection of workflows, policy/format references, and a standalone Skill packager. It does not require a repository-owned verifier CLI, capture engine, proxy product, or migration runtime.
 
-Keep initial implementation focused on a small independent verifier. A general compiler, custom IR, or complete PHP compatibility runtime is outside the initial scope.
+The Agent produces application code, proxy code/configuration, fixtures, and executable checks in the target project as needed. Prefer that project's existing tools; fill concrete gaps with minimal target-specific scripts or adapters. Executable evidence is required, but a particular CLI or framework is not. Tool selection and comparison requirements belong to the Evidence Protocol.
+
+Extract a common tool into this repository only after actual migrations demonstrate repeated mechanics worth maintaining. Do not make a generic verifier, gateway, compiler, or PHP compatibility runtime a prerequisite for using the Skills. The packaging script distributes Skills; it is not a migration runtime. Do not describe unexecuted work or unavailable capabilities as implemented.
 
 ## Documentation Ownership
 
@@ -16,8 +18,8 @@ Edit each rule in its owning document. Other documents should link to the owner 
 | --- | --- |
 | Database library choice, SQL/schema preservation, binding, dynamic tables, result mapping, transactions | [Database policy](skills/sql-extract/references/database-policy.md) |
 | Contract fields, comparison semantics, normalization declarations, baseline changes | [Behavior Contract](skills/behavior-extract/references/behavior-contract.md) |
-| Execution validity, verdicts/aggregation, coverage, evidence retention, security change records | [Evidence Protocol](skills/equivalence-check/references/evidence-protocol.md) |
-| Proxy trust/protocol requirements, patch lifecycle, rollback and PHP retirement | [Virtual Patch Plan](skills/virtual-patch/references/patch-plan.md) |
+| Execution tool selection, validity, artifact reuse/invalidation, verdicts/aggregation, coverage, security changes | [Evidence Protocol](skills/equivalence-check/references/evidence-protocol.md) |
+| Proxy capability planning, production readiness, patch lifecycle and PHP retirement | [Virtual Patch Plan](skills/virtual-patch/references/patch-plan.md) |
 
 Read the relevant owner before work in that area. These references are instructions and design formats, not implemented schemas or verification tools. If a procedure conflicts with its owner, correct the procedure instead of introducing a second policy.
 
@@ -27,7 +29,7 @@ Read the relevant owner before work in that area. These references are instructi
 - Write all content under `skills/`, including metadata, comments, and examples, in English. Keep these instructions in English; README.md is Korean.
 - Each Skill has `SKILL.md` with YAML `name` and `description`; match its name to its directory.
 - Keep reusable rules in the owners above. A new owner is warranted only for a distinct subject, not to duplicate an existing policy.
-- Planned verifier code belongs in `cmd/equiv/`; planned machine-validation schemas belong in `contracts/schema/`. Naming these paths does not implement them.
+- Application-specific code, checks, proxy configuration, and optional schemas belong in the target project. No `cmd/equiv/` or `contracts/schema/` implementation is mandated here. Keep reference formats tool-neutral.
 
 ## Skill Routing
 
@@ -40,9 +42,15 @@ Read the relevant owner before work in that area. These references are instructi
 | [go-migrate](skills/go-migrate/SKILL.md) | Implement and revise Go | Go source / Migration Notes |
 | [equivalence-check](skills/equivalence-check/SKILL.md) | Execute comparisons and interpret diffs | Diff / Evidence Report |
 | [security-review](skills/security-review/SKILL.md) | Review risks and proposed fixes | Security Report / Change Records |
-| [virtual-patch](skills/virtual-patch/SKILL.md) | Derive interim defenses and retire replaced PHP features | Patch Plan / Proxy implementation / Retirement evidence |
+| [virtual-patch](skills/virtual-patch/SKILL.md) | Temporarily mitigate an identified risk when interim protection is needed | Patch Plan / Target-specific proxy source or configuration / Retirement evidence |
 
-Start with analysis, contracts, and fixtures, then extract SQL, implement Go, compare, and revise. Use security review for relevant findings and `virtual-patch` when protection is needed during the transition. Consult each Skill for its procedure rather than repeating it here.
+Choose one feature or change, inspect its existing artifacts, and invoke only the Skills needed to close the actual gaps. Apply [artifact reuse rules](skills/equivalence-check/references/evidence-protocol.md#artifact-reuse) before repeating work. Reading a required policy does not mean invoking its owning Skill.
+
+- If analysis, contract, and fixtures are valid, implement or repair the Go feature and compare it; do not recreate those inputs.
+- Use `sql-extract` for missing or changed database access plans; skip it for features without database work. Recapture only fixtures invalidated by relevant changes or missing scenarios.
+- Use `security-review` for relevant risks. Invoke `virtual-patch` only when an identified risk needs temporary mitigation; ordinary feature migration does not invoke it. Preserve all target application features, treating missing proxy capabilities as implementation tasks rather than permanent exclusions.
+
+Record the selected feature, reused artifact IDs, invalidated dependencies, and next required task. A change to shared dependencies can affect multiple features; use the Evidence Protocol to determine the verification scope. Consult each Skill for its own procedure.
 
 ## Standalone Skill Packaging
 
@@ -64,4 +72,4 @@ For documentation changes, check Skill frontmatter, Markdown links/fences, UTF-8
 
 For executable changes, run relevant build and behavior checks. For SQL or verifier changes, derive required checks and result reporting from the owning policy. Do not claim unavailable tools or unexecuted checks succeeded.
 
-Start verifier implementation with a small PHP/Go read scenario; add stateful observation adapters incrementally. Establish runnable command syntax and exit codes when implemented rather than documenting nonexistent commands.
+Verify target-specific scripts and adapters against real scenarios, including deliberate mismatches when implementing a comparator. Record actual commands, tool/script versions, results, and limits under the Evidence Protocol. Repeated target work can motivate a shared utility later; do not create one speculatively or document nonexistent commands as available.

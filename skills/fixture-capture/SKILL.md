@@ -7,7 +7,11 @@ description: Capture reproducible request sequences, responses, and database, se
 
 Take a Behavior Contract and an executable original application as inputs. Read the [Evidence Protocol](../equivalence-check/references/evidence-protocol.md) for execution validity and evidence retention and the [Behavior Contract](../behavior-extract/references/behavior-contract.md) for baseline and normalization rules.
 
+Check existing fixtures under the Evidence Protocol's artifact reuse rules first. Capture only missing scenarios or stale observations unless a fresh capture is explicitly requested; a Go implementation change alone does not require recapturing PHP.
+
 ## Reproduction Prerequisites
+
+Select existing capture tools or prepare minimal target-project capture scripts using the Evidence Protocol's execution tool rules. A repository-provided collector is not a prerequisite.
 
 1. Pin the source revision, contract revision/hash, PHP/extensions/database/web server versions, dependency lockfiles, environment profile, and capture tool version. Reference secrets without exposing their values.
 2. Prepare sanitized test database, file tree, session store, and external service doubles as an initial snapshot and record its digest. Do not replay writes against production.

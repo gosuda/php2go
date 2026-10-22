@@ -7,6 +7,8 @@ description: Analyze a PHP application's entry points, dependencies, global stat
 
 Extract a feature inventory and runtime prerequisites without modifying the original source. Analysis provides input for contracts and scenarios; it does not prove equivalence.
 
+For incremental work, scope analysis to the selected feature and its reachable shared dependencies. Check the [artifact reuse rules](../equivalence-check/references/evidence-protocol.md#artifact-reuse), update the existing inventory, and broaden analysis only when missing evidence or uncertain shared impact requires it.
+
 ## Procedure
 
 1. Identify the source revision, PHP version and extensions, Composer lockfile, web server rewrites, environment configuration, and database engine. Distinguish facts confirmed by execution from static analysis inferences.

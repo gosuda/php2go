@@ -7,6 +7,8 @@ description: Extract Behavior Contracts and success, boundary, failure, and auth
 
 Use analysis findings and observations of the original application to establish criteria independent of the candidate implementation. Read [references/behavior-contract.md](references/behavior-contract.md), which owns contract fields, comparison declarations, baseline management, and examples.
 
+Work on the selected feature's missing or changed declarations. Reuse valid analysis and existing contracts under the [artifact reuse rules](../equivalence-check/references/evidence-protocol.md#artifact-reuse) rather than rebuilding all contracts.
+
 ## Procedure
 
 1. Pin the feature ID and original source revision. When inputs are incomplete, distinguish contracts inferred from source from contracts confirmed by execution.

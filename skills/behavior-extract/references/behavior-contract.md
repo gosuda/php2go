@@ -1,6 +1,6 @@
 # Behavior Contract Draft v0
 
-This is a draft format for human review. No machine-validation schema or execution tool is provided yet. Assertion names in the YAML example are identifiers for future adapters to implement, not currently executable commands.
+This is a tool-neutral draft format for human review, not an executable schema. Assertion names in the YAML example are illustrative identifiers to connect to the target project's existing or Agent-authored tests; they are not commands or a dependency on future shared adapters. Add project-specific machine validation only when useful.
 
 This document owns contract structure, comparison declarations, and baseline management. Execution verdicts and security change records belong to the [Evidence Protocol](../../equivalence-check/references/evidence-protocol.md).
 

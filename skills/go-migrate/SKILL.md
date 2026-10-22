@@ -5,7 +5,7 @@ description: Implement Go code that preserves observable PHP behavior using Beha
 
 # Go Implementation
 
-Implement feature by feature from the original source, feature inventory, contracts, fixtures, and SQL extraction artifacts. Respect the target Go project's structure.
+Implement the selected feature from available source, inventory, contracts, fixtures, and SQL access plans where applicable. Check existing inputs against the [artifact reuse rules](../equivalence-check/references/evidence-protocol.md#artifact-reuse) and obtain only missing or stale prerequisites. A feature without database work does not require SQL extraction. Respect the target Go project's structure.
 
 Read the [database policy](../sql-extract/references/database-policy.md) for DB implementation, [contract baseline rules](../behavior-extract/references/behavior-contract.md#baseline-management) before proposing expectation changes, and [Evidence Protocol](../equivalence-check/references/evidence-protocol.md) for comparison results and security changes. These documents own the shared rules; this Skill defines implementation work.
 
@@ -20,7 +20,7 @@ Read the [database policy](../sql-extract/references/database-policy.md) for DB 
 ## Revision Loop
 
 1. Build and test the feature and run the database policy's relevant checks for any DB work.
-2. Execute the available verifier for affected scenarios and collect its output under the Evidence Protocol.
+2. Run the target project's selected executable checks for affected scenarios and collect their output under the Evidence Protocol. Fill missing checks with focused tests/scripts rather than waiting for a shared verifier.
 3. Trace diffs to input interpretation, response generation, state transitions, or environment configuration and revise the candidate. Route proposed baseline or security changes through their owning references.
 4. Rerun affected and related regression scenarios. If the same cause repeats without progress, record the missing information and unresolved difference and continue other implementable work.
 

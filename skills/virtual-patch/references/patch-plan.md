@@ -1,61 +1,84 @@
 # Virtual Patch Plan
 
-Use this record to derive temporary defenses from PHP analysis and retire them with the affected PHP implementation. It is a design checklist, not a general WAF specification, machine schema, or implemented configuration format.
+This document owns proxy capability planning, production readiness, and patch lifecycle for the target project. The Agent reuses its existing proxy components or generates the needed Go source/configuration and checks; a common gateway product is not required. [Evidence Protocol](../../equivalence-check/references/evidence-protocol.md) owns tool selection, reuse, verdicts, and security change records; [database policy](../../sql-extract/references/database-policy.md) applies if a replacement handler accesses a database.
 
-This document owns proxy requirements and lifecycle. [Evidence Protocol](../../equivalence-check/references/evidence-protocol.md) owns verdicts and security change records; [database policy](../../sql-extract/references/database-policy.md) owns DB access requirements.
+## Coverage Goal and Implementation Order
+
+Preserve every feature required by the target application, either through compatible PHP forwarding during migration or through a verified Go replacement. Do not exclude a feature merely because it uses streaming, protocol upgrades, session integration, or another capability beyond the first implementation.
+
+A useful first increment is ordinary HTTP forwarding, explicit path blocking, and route-by-route Go dispatch. This is an implementation order, not a permanent support boundary. If the selected feature requires another capability, implement or integrate that capability and verify it as part of the feature work. Reuse existing Go libraries and ingress facilities instead of rebuilding a general gateway platform.
+
+| Action | Behavior |
+| --- | --- |
+| Forward | Preserve the required request/response or protocol behavior through a configured PHP upstream |
+| Block or guard | Apply an evidence-backed feature-specific mitigation before the vulnerable operation |
+| Route to Go | Dispatch selected traffic to a Go implementation and verify its feature contract |
+| Transform when needed | Apply a bounded request/response adaptation justified by the feature contract or recorded security change |
+
+Use deterministic route precedence and documented matching semantics. Unmatched requests retain compatible PHP handling. Test encoded forms and alternate entry points relevant to the feature. A path block may intentionally disable legitimate use; record that impact. If a narrower guard preserves legitimate use, it may be implemented and verified rather than rejecting the whole path for convenience.
+
+Use an HTTP server serving PHP as the HTTP upstream, not a PHP-FPM socket. An existing ingress can continue serving specialized paths when that preserves the feature and the deployment boundary is explicit. Forwarded PHP functionality is preserved functionality, not completed Go implementation coverage.
+
+## Capability Planning
+
+Assess capabilities from application analysis and contracts, not from a blanket unsupported list.
+
+| Required capability | Implementation and verification work when needed |
+| --- | --- |
+| WebSocket, protocol upgrades, or tunnels used by the application | Integrate appropriate forwarding; verify handshake, authorization, bidirectional transfer, cancellation, and closure |
+| SSE or other request/response streams | Verify streaming, flushing, cancellation, backpressure, and suitable timeouts |
+| Request/response transformation | Scope parsing and buffering; verify encoding/compression, content length, validators, and side effects |
+| Cookies, redirects, or public-origin adaptation | Preserve or explicitly adapt public-origin behavior and verify repeated cookies and subsequent requests |
+| PHP/Go session and identity compatibility | Reuse compatible storage/adapters or implement the required bridge; verify login/logout, authorization, and state transitions |
+| Sticky/canary routing or coordinated switching | Add only if the target transition needs it; verify coherent user/state ownership and rollback |
+| Forwarded headers, TLS, and ingress integration | Reuse the deployment's trust and termination facilities, adding only missing integration and verifying the resulting origin/identity behavior |
+
+These are work categories, not a requirement to build every subsystem before any feature can ship. Library support may satisfy a requirement after integration is verified; do not presume it is absent or declare it supported without evidence.
+
+Record capability status from actual implementation and tests. `UNSUPPORTED` means a current execution/observation/tooling limitation with a concrete follow-up, not a decision to permanently drop the application feature. Use `NOT COVERED` for missing valid execution evidence under the Evidence Protocol.
+
+A capability gap should drive the next implementation or integration task. Continue that work within the authorized feature scope rather than stopping because it exceeds the first increment. If an external prerequisite prevents progress, retain working PHP handling and report the precise blocker and plan.
+
+## Production Readiness
+
+Do not cut over a route until every capability it requires is implemented or delegated through a verified compatible path, and the feature's required checks have passed. This gate restricts unverified deployment, not implementation or future feature support. If the entire deployment must pass through the proxy, assess all routes affected by that switch.
+
+An existing PHP/ingress path may retain service while a capability is being completed. Document that path and whether the virtual patch protects it; do not silently bypass a mitigation or claim excluded traffic is protected. Reject requests only when no safe supported route exists or an intentional security rule calls for rejection, with the availability impact recorded. Do not install blanket WebSocket/SSE rejection merely because the first implementation focused on ordinary HTTP.
 
 ## Required Record
 
-| Field | Required content |
+| Field | Content |
 | --- | --- |
-| Identity | Patch ID, revision, owner, purpose, affected feature/contract/scenario IDs |
-| Analysis evidence | PHP source/data flow, finding ID and confidence, attack preconditions, affected inputs, and proxy enforcement limits |
-| Baseline | Original revision, fixture hashes, direct PHP behavior, initial state |
-| Topology | Public origin, ingress/TLS termination, trusted hops, fixed PHP HTTP upstream and optional Go handlers |
-| Match | Allowed hosts, methods, paths/query rules, precedence, encoding rules, unmatched behavior |
-| Action | Request guard, request transformation, response transformation, or Go route replacement |
-| Behavior delta | Expected response/state changes; approval evidence if already approved, otherwise proposal status |
-| Session policy | Identity verification, session storage/format, cookie attributes, CSRF, login/logout behavior |
-| Failure policy | Upstream errors, timeouts, invalid configuration, retry limits, and behavior after partial responses or uncertain writes |
-| Lifecycle | Enable/disable mechanism, review deadline, expiry action, rollback target, permanent fix and removal criteria |
-| Retirement dependency map | Rule → protected PHP feature → permanent Go fix → PHP routes/code/session/include/deployment consumers that must be retired or retained |
-| Evidence | Build/test results, pass-through and patched diffs, effect observations, limitations, rollback rehearsal |
+| Identity and evidence | Patch/feature/finding IDs, source revision, source/data-flow evidence, contract and reusable fixtures |
+| Action and match | Selected actions, route precedence, matching semantics, unmatched behavior, and expected delta |
+| Capability plan | Required protocols/state/origin behavior, existing support, integration work, implementation tasks, and evidence |
+| Production readiness | Per-route verified handling or delegation, missing checks, deployment blockers, and next work |
+| Lifecycle | Owner, enable/disable setting, review deadline, expiry action, safe rollback target, permanent fix and retirement dependencies |
 
-Default unmatched routing should preserve existing PHP service behavior through the proxy. Record intentional security restrictions using the Evidence Protocol's change record.
+Use the Evidence Protocol for security change approval and verdict fields rather than defining another format here.
 
-## HTTP and Trust Checks
+## Compatibility and Failure Rules
 
-- Fix upstream destinations in trusted configuration. Never accept arbitrary upstream URLs from request parameters or headers. Validate incoming hosts and avoid routing loops.
-- Prefer `ReverseProxy.Rewrite`. `SetURL` changes upstream Host and may join a base path; `SetXForwarded` derives forwarding values from the immediate request. Specify the desired public Host/scheme and how verified ingress metadata is carried through TLS termination. Do not blindly copy client-supplied forwarding or identity headers. See [Go ReverseProxy documentation](https://pkg.go.dev/net/http/httputil#ReverseProxy).
-- Define one route matching interpretation and check it against PHP/web server parsing. Cover duplicate query keys, percent encoding, encoded separators, semicolons, trailing slashes, and malformed input relevant to the patch. `Rewrite` can remove unparsable query parameters; do not assume byte-identical forwarding or copy `RawQuery` back without examining parsing disagreement. Preserve legacy forms only under an explicit reviewed policy.
-- Preserve repeated `Set-Cookie` headers, cookie Domain/Path/Secure/HttpOnly/SameSite/expiry, redirect Location, and subsequent authenticated requests. Avoid exposing internal upstream addresses. Rewrite cookies or redirects only when the public-origin contract requires it.
-- Preserve request bodies, multipart uploads, content types, status codes, and response representations within scope. Inspecting a body must not consume it before forwarding; apply bounded buffering only where required. Cover cancellation, slow uploads, large responses, SSE/streaming, WebSocket upgrades, and Range/HEAD/conditional requests when used. Report unhandled required modes rather than silently buffering or corrupting them.
-- If modifying a response body, account for compression, charset, Content-Length, validators such as ETag, and cache policy. Bound buffering and limit transformations to explicit content types and routes. Do not apply blanket HTML/string substitutions. Client-visible redaction cannot prevent upstream side effects.
-- Configure errors, timeouts, and transport behavior explicitly. An upstream error must not become HTTP 200. Never switch an already attempted write to the other backend after a timeout; its outcome may be unknown. Do not add application retries without proving replay safety for the actual feature, including GET routes that write state.
-- Keep logs and metrics useful without recording session tokens, secrets, or full sensitive bodies. Track patch decisions, upstream/handler identity, latency, errors, and configuration revision.
-
-## Routing, Writes, and Sessions
-
-Route each request once. Canary selection should keep a coherent user/session workflow where cross-backend state matters. If PHP and Go cannot read compatible session state or preserve authorization, leave the affected feature on PHP until that boundary is implemented and verified.
-
-Do not mirror writes to PHP and Go against shared live state. A nominal read may update counters, sessions, or queues, so method alone does not prove safe shadowing. Use isolated captures and independent snapshots for differential execution.
-
-Apply the database policy when introducing a Go write path. Account for in-flight requests and state compatibility when switching routes back.
+- Keep upstream destinations in trusted configuration. Do not select arbitrary destinations from user input or duplicate live side effects. Never retry an uncertain write against another backend.
+- Preserve public Host/scheme and verified forwarding/identity information across the actual ingress topology. Check `Rewrite`, `SetURL`, query handling, and upgrade behavior against the feature contract; see [Go ReverseProxy documentation](https://pkg.go.dev/net/http/httputil#ReverseProxy).
+- Preserve bodies, status, headers, repeated Set-Cookie, and redirects unless a declared feature adaptation requires a change. Response rewriting cannot undo upstream writes or external effects.
+- Match resource limits and timeout/cancellation behavior to the request or streaming contract. Upstream failures must not become generic success or automatic unprotected fallback. Invalid configuration or expiry must not disable a security defense.
+- Record patch decisions, configuration revisions, and errors without exposing secrets. The Go handler or verified identity adapter owns authentication/authorization; cookie presence alone does not establish identity.
 
 ## Verification Matrix
 
-1. **Direct PHP versus proxy with patch disabled:** Compare declared HTTP and state behavior from independent equivalent snapshots. List required transport/origin adaptations explicitly rather than treating them as arbitrary ignored fields.
-2. **Baseline versus active patch:** Exercise exact matches, near misses, unauthorized users, malformed inputs, body boundaries, and upstream failures. Link expected and unexpected differences to the Evidence Protocol's result and change records.
-3. **Go route replacement:** Compare the actual Go implementation against direct PHP using the feature contract. Pass-through results do not count as Go implementation coverage.
-4. **Operational transitions:** Verify enable/disable behavior, invalid config rejection, expiry behavior, rollback and in-flight handling. Do not remove a security mitigation as an automatic fallback.
-5. **Defense and retirement:** Reproduce the specific finding only in authorized isolated fixtures. Check legitimate near-boundary inputs for false positives, relevant encoding/alternate-route bypasses, and origin reachability. Verify the Go replacement blocks the attack with the temporary rule disabled, then verify old PHP routes cannot be reached after retirement.
+Run stages relevant to the chosen feature and lifecycle point, reusing valid evidence.
 
-Apply the Evidence Protocol to these observations, including missing channels or scenarios.
+1. **Forward:** Compare direct PHP with proxy handling for required ordinary and specialized protocol scenarios and declared effects.
+2. **Mitigation:** Verify the identified risk is contained before the vulnerable effect; assess alternate-path bypasses and legitimate traffic. Record intended security/availability changes.
+3. **Go route:** Compare the Go implementation with PHP under the feature contract, including required protocols and identity/state boundaries.
+4. **Capabilities and transitions:** Verify each capability task or delegated path, upstream errors, configuration changes, and the rollback strategy actually used. Keep unverified cutovers distinct from implementation work in progress.
+5. **Permanent replacement:** Verify the original attack is contained without the temporary rule, then check old PHP entry points cannot bypass Go.
 
-## Expiry and Removal
+## Review, Rollback, and Removal
 
-Set a review deadline and an explicit expiry action. A security mitigation should alert and retain protection or use a reviewed safe response until the permanent fix is ready; time passing must not silently reopen the original vulnerability. For other patches, specify whether expiry stops rollout, alerts, or reverts to a known compatible route. Do not infer an expiry action from a timestamp alone.
+Start with versioned route configuration and a manual rollback strategy when sufficient. Add coordination only when the feature's actual state or traffic requirements demand it; do not forbid that work. Rollback selects a compatible path with necessary protection retained and does not undo committed writes.
 
-Rehearse rollback in isolation, retaining the patch configuration and evidence. Rolling back routing does not reverse writes already committed, and a security rollback target must preserve necessary protection. If rollback still targets PHP, retain the required rule and PHP artifacts until that dependency is closed.
+Declare the action at the review deadline, such as alerting while retaining protection. If rollback still depends on PHP, keep the required rule and artifacts until that dependency closes.
 
-After the permanent Go fix is verified and deployed within authorized scope, retire the rule and the now-unused PHP implementation as one tracked feature transition. Check alternative routes, direct origin access, cron/CLI entry points, includes, shared session/authentication code, and deployment dependencies before deleting anything. Keep shared infrastructure for remaining PHP consumers and document why it remains. Remove the final PHP runtime/upstream only after no feature or rollback path requires it. Retain regression scenarios and change history.
+After the permanent Go fix is verified and authorized cutover is complete, retire the redundant rule and unused PHP feature together. Check remaining route, cron/CLI, include, session, shared code, and rollback consumers before removal. Keep shared PHP dependencies until no consumers remain. Retirement remains a later feature milestone, not a prerequisite to deliver an interim mitigation.

@@ -7,6 +7,8 @@ description: Extract PHP SQL and existing schemas, separate static queries from 
 
 Read the authoritative [database policy](references/database-policy.md) before extraction and the [security change record format](../equivalence-check/references/evidence-protocol.md#security-change-records) when extraction exposes an intentional behavior change. This Skill defines extraction tasks; those documents own the shared rules.
 
+Apply the Evidence Protocol's artifact reuse rules to the selected feature's SQL plans. Inventory the call sites and shared dependencies reachable from that feature, reusing unchanged schema/runtime artifacts and existing plans. Expand the scope only for unresolved shared impact.
+
 ## Procedure
 
 1. Obtain the original revision and deployed schema. Inventory wrappers, SQL call sites, string construction branches, dynamic identifiers, database functions/triggers/procedures/DDL, and transaction boundaries. Supplement unresolved static analysis with isolated observations and identify remaining gaps.

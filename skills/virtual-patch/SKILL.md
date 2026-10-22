@@ -1,47 +1,24 @@
 ---
 name: virtual-patch
-description: Derive temporary Go reverse proxy defenses from legacy PHP analysis, verify scoped mitigations, and retire rules and PHP dependencies as affected features are replaced by verified Go implementations.
+description: Temporarily mitigate an identified PHP risk through a Go reverse proxy, implementing the protocol, identity, or transformation support required by the affected feature during migration.
 ---
 
 # Analysis-Driven Virtual Patching
 
-Use this Skill to reduce specific, identified PHP risks while migration is in progress. Derive feature-specific defenses from legacy source analysis and observed behavior, place them in a Go reverse proxy, and replace protected PHP features incrementally with verified Go implementations. Retire the associated rules and PHP dependencies when the replacement no longer relies on them.
+Invoke this Skill only when an identified PHP risk needs temporary mitigation during migration. It is not a required migration stage or a generic routing task. Reuse valid analysis, contracts, and fixtures for the affected feature; obtain missing evidence without running every Skill.
 
-Do not build a general-purpose WAF or introduce broad attack signatures without feature evidence. Default traffic continues to the configured PHP HTTP upstream; only explicitly matched routes receive a defense or Go handling. This mode does not claim to fix every vulnerability or prove that a protected PHP feature is already migrated.
-
-Read [references/patch-plan.md](references/patch-plan.md) for the patch record, protocol checks, and lifecycle, and the [Evidence Protocol](../equivalence-check/references/evidence-protocol.md) for verdicts and security change records. The Skill supplies instructions, not an existing proxy binary or deployable configuration.
+Read [references/patch-plan.md](references/patch-plan.md), which owns capability planning, production readiness, and patch lifecycle. Read the [Evidence Protocol](../equivalence-check/references/evidence-protocol.md) for artifact reuse, verdicts, and security change records. Proxy source/configuration and tests are target-project artifacts; no shared proxy binary from this repository is required.
 
 ## Procedure
 
-1. Start from the PHP Feature Inventory, source locations/data flow, relevant security findings, and Behavior Contracts. Identify the original revision, public origin, PHP HTTP upstream, existing ingress/rewrite rules, TLS termination, and trusted proxy chain. An HTTP reverse proxy targets a web server serving PHP, not a PHP-FPM FastCGI socket.
-2. For each identified risk, define its affected inputs, exploit preconditions, a narrowly scoped rule, expected safe behavior, normal requests that must remain accepted, and known bypasses/limits. Capture baseline behavior before adding the proxy. Link finding → feature/contract → rule → scenarios → permanent Go fix. Define exact host/method/path/query matching, precedence, unmatched behavior, ownership, review deadline, expiry action, and removal criteria. Label uncertain findings rather than presenting them as confirmed exploits.
-3. Build a small Go entry point using `net/http/httputil.ReverseProxy` and `Rewrite` on a compatible Go version. Keep upstreams configured server-side. Place route decisions before dispatch and send each request to one authoritative implementation. Keep request/response transformation narrowly scoped.
-4. Preserve the declared external origin, path/query representation, body, cookies, redirects, and authentication/session semantics. Define trusted forwarded-header handling, timeout/error behavior, streaming, and upgrade requirements. Check Go/PHP parsing differences rather than assuming transparent forwarding.
-5. Implement the patch and an explicit enable/disable mechanism with validated configuration. Do not duplicate writes, automatically retry uncertain writes against PHP, or shadow traffic with side effects. Do not bypass a security block on error or expiry.
-6. Execute the Patch Plan's verification matrix, including attack containment, legitimate boundary inputs, and direct-origin bypass checks. Attach comparison results and proposed security changes using the Evidence Protocol.
-7. Prepare the implementation, tested configuration, operational checks, and rollback procedure for review. Do not change live ingress, DNS, certificates, or services merely because a Skill was invoked. Execute rollout only within the user's authorized deployment scope.
-8. Migrate the protected feature to Go with the permanent fix and explicit session/state compatibility. Verify both ordinary behavior and the attack regression without the temporary rule in isolation. After authorized cutover and rollback review, remove the redundant rule and the feature's unused PHP route/code/dependencies together. Retain shared PHP infrastructure until every consumer is migrated, and keep regression evidence and change history.
-
-## Incremental Lifecycle
-
-```text
-Analyze PHP and identify a feature-specific risk
-  → Generate and verify a temporary proxy defense
-  → Keep the protected PHP feature running during migration
-  → Implement and verify the permanent Go replacement
-  → Cut over the feature and retire its rule and unused PHP dependencies
-```
-
-Track each feature separately; other features can remain on protected PHP. Replacement alone is insufficient to remove a rule: prove that Go supplies the intended protection without it and that old PHP entry points cannot still be reached.
-
-## Boundaries
-
-- Prefer a request guard or explicit route replacement when it solves the problem. Response rewriting is appropriate only for a known bounded representation; it does not undo database writes or external effects already performed by PHP.
-- State when a proxy rule cannot enforce a property, such as authorization depending on unavailable database or session state. Do not substitute a regex or header check for that property. Record residual risk and required source/Go fixes rather than claiming complete mitigation.
-- A route handled by Go must preserve authentication and authorization, including PHP session compatibility where needed. Do not treat possession of a cookie as proof of identity. For database access, read the [database policy](../sql-extract/references/database-policy.md).
-- Keep proxied PHP routes visible as unmigrated features. Proxy pass-through evidence is not evidence that those features have been implemented in Go.
-- Report unsupported protocol cases and unverified paths. A proxy must not conceal an unimplemented feature by returning generic success.
+1. Select the feature and finding. Link existing source/data-flow evidence, contract, and fixtures, and record the intended mitigation and permanent Go fix.
+2. Inventory the feature's protocol, origin, identity, and state requirements. Identify existing library/ingress support and missing integration, and turn gaps into implementation tasks under the Patch Plan. Requirements beyond ordinary HTTP are not grounds to exclude the feature.
+3. Prepare a Patch Plan selecting the required actions, route matching, expected behavior delta, capability work, and lifecycle decisions. Assess legitimate requests affected by the mitigation.
+4. Implement the selected mitigation and capabilities needed to preserve the feature. Start with simple forwarding/routing where sufficient and reuse existing components for specialized behavior. Avoid unrelated gateway subsystems, but do not stop necessary feature work merely because it exceeds the first increment.
+5. Execute the relevant verification matrix in isolation, reusing valid fixtures. Attach comparison results, security change records, and the production readiness decision. Resolve capability gaps before cutover while preserving a verified existing path where possible.
+6. Prepare the tested implementation, configuration, and manual rollback procedure for review. Deploy only within the user's authorized scope; invoking this Skill does not authorize live infrastructure changes.
+7. When the protected feature's Go replacement is ready, verify the permanent fix and perform the Patch Plan's cutover and joint rule/PHP retirement procedure. That later work need not be completed to deliver an interim patch.
 
 ## Deliverables
 
-Deliver a Patch Plan, finding-to-rule-to-feature inventory, Go source and configuration instructions, attack and legitimate-request evidence, residual risks, enable/disable and rollback procedures, and a joint rule/PHP retirement plan linked to the permanent Go fix. Record unavailable checks as unexecuted. A working proxy is not a whole-application equivalence verdict.
+Deliver a feature/finding-linked Patch Plan, selected action and implementation, reusable evidence references, support gaps and rollout decision, and a removal task tied to the permanent Go fix. The plan owns lifecycle requirements; this Skill does not add a second policy checklist.
