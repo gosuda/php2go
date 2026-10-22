@@ -5,7 +5,7 @@ description: Review unsafe original behavior and vulnerabilities introduced duri
 
 # Migration Security Review
 
-Avoid treating preservation of original vulnerabilities as an automatic migration goal, while ensuring security fixes do not conceal equivalence differences. Security findings and functional equivalence verdicts remain separate.
+Review original and candidate risks within actual feature boundaries. Read the [Evidence Protocol](../equivalence-check/references/evidence-protocol.md#security-change-records) for the authoritative security change format and its relationship to equivalence results.
 
 ## Review Scope
 
@@ -17,12 +17,12 @@ Avoid treating preservation of original vulnerabilities as an automatic migratio
 
 1. Record source locations, data flows, affected inputs/permissions/state, and related features/contracts/scenarios.
 2. Perform necessary reproduction only in authorized isolated local environments with synthetic data. A review request does not authorize attacks on external systems or production data changes.
-3. Link actual original and candidate results, distinguishing reproduced behavior from behavior not reproduced and the reasons. Preserve mismatches in equivalence results when differences exist.
-4. Propose intentional changes to original risks with a change ID, rationale, impact scope, compatibility changes, and regression scenarios. Proceed within existing approval with its evidence linked; do not fabricate approval.
-5. Verify safe behavior after fixes and regress normal paths. Do not implement security exceptions through broad normalization or comparison exclusions.
+3. Link actual original and candidate results, distinguishing reproduced behavior from behavior not reproduced and the reasons.
+4. Prepare proposed fixes and security change records under the Evidence Protocol, attaching the relevant finding, implementation, and regression scenarios.
+5. Verify safe behavior after fixes and regress normal paths. Apply the contract's comparison declarations when evaluating results.
 
 ## Deliverables
 
-Include finding IDs, classification (original/new/unconfirmed), impact and severity rationale, source/execution evidence, proposals/actions, and residual risks in the Security Report. Link approved changes to their approver, evidence, timestamp, scope, regression evidence, and relevant mismatches.
+Include finding IDs, classification (original/new/unconfirmed), impact and severity rationale, source/execution evidence, proposals/actions, and residual risks in the Security Report. Attach security change records using the referenced format rather than defining another approval or verdict format here.
 
 A finding of no new vulnerabilities applies only within the review scope. Security review PASS does not establish functional equivalence PASS, and functional equivalence PASS does not prove security.

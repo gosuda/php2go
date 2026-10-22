@@ -15,14 +15,10 @@ Executable verification tools determine verdicts. The Agent prepares execution, 
 4. Execute the same request sequence per scenario. For dynamic tokens and IDs, use each execution's values according to declared extraction/binding rules and check logical request meaning and value relationships. Do not hide failures with arbitrary retries.
 5. Capture raw values and deltas for all required channels. Apply only declared normalization and comparators and execute each invariant's actual assertion. Do not replace missing observations with empty values or `none`.
 6. Package machine-readable results, diffs, raw evidence, and coverage produced by the verifier. After changes, reverify affected scenarios against the new candidate revision.
-7. Map each SQL Inventory site/branch to static SQL or dynamic construction, its Go access function, result mapping, and scenarios. Include schema/query/construction hashes, driver version, and connection settings. Successful query execution does not establish database equivalence PASS. Compare empty results, NULL, numeric/time conversions, ordering, affected rows, generated IDs, statement order, transaction rollback/isolation, and dynamic table registry/authorization behavior within the contract scope. Verify invalid identifiers are rejected and bound values remain data rather than SQL.
+7. Map SQL Inventory branches to queries/construction, Go functions, mappings, and scenarios. Derive database-specific checks from the [database policy](../sql-extract/references/database-policy.md#completion-evidence) and attach their results to the report.
 
-## Verdict Boundaries
+## Report Assembly
 
-- Differences found by valid comparisons are `MISMATCH`. Do not replace a tool's verdict with PASS based on Agent interpretation.
-- Record `UNSUPPORTED` for required channels or assertions the tool cannot support and `NOT COVERED` for insufficient execution evidence. If no verifier exists, report unexecuted scenarios and the missing tool without generating PASS.
-- Link approved security changes in separate records while retaining actual diffs and `MISMATCH` results.
-- Do not infer whole-feature equivalence from partial success. Include inventory features with no scenarios in the report.
-- For a proxy migration, compare direct PHP with pass-through separately from patched or Go-handled routes, using independent equivalent state. Do not count forwarded PHP behavior as Go implementation coverage or replay live writes to both backends. Link intentional patch differences to change records while retaining `MISMATCH`.
+Apply the Evidence Protocol's validity, verdict, aggregation, and security change rules directly. Assemble results against the complete feature inventory and identify missing prerequisites or adapters.
 
-When execution is impossible, identify missing prerequisites and adapters concretely. Label manual comparisons and AI reviews as advisory observations rather than evidence of deterministic executable verification.
+For proxy work, run the comparison stages in the [Virtual Patch Plan](../virtual-patch/references/patch-plan.md#verification-matrix) and identify which implementation handled each scenario.

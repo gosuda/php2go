@@ -2,11 +2,13 @@
 
 Apply this policy to migration targets. Begin with `database/sql` and a driver for the existing database. Preserve SQL semantics without requiring code generation or an ORM. This repository contains instructions, not executable database access code.
 
+This document is the sole owner of shared database rules. Extraction and implementation Skills reference it rather than maintaining independent copies. [Evidence Protocol](../../equivalence-check/references/evidence-protocol.md) owns verdicts, coverage, and security change handling.
+
 ## Preserve the Database Before Redesigning It
 
 The first migration preserves existing schema, table names, statement order, filters, joins, sorting, limits, transactions, and database configuration. Record actual deployed DDL and runtime settings rather than assuming historical migrations match production.
 
-Separate PHP-to-Go migration from database redesign. After equivalence is established, propose SQL optimization, schema consolidation, or a different access library as an independently verified change. Parameterization may intentionally remove unsafe original behavior; track those differences separately rather than preserving injection risks or hiding mismatches.
+Separate PHP-to-Go migration from database redesign. After equivalence is established, propose SQL optimization, schema consolidation, or a different access library as an independently verified change. Parameterization and input validation are separate decisions: adding LIMIT, integer parsing, or a new HTTP 400 may change original behavior. For intentional security differences, use the Evidence Protocol's security change record.
 
 ## Suggested Target Layout
 
@@ -67,4 +69,4 @@ Consider sqlx only if repetitive row mapping demonstrates a concrete maintenance
 4. Independent equivalent snapshots produce comparable PHP/Go observations, including database effects, transaction failure/rollback, dynamic registry updates, and required DDL behavior.
 5. Existing schema and SQL semantics remain intact apart from explicitly tracked changes. Deferred optimization or redesign is recorded separately.
 
-Report missing tools, failed builds, and unexecuted scenarios accurately. Successful SQL execution does not establish functional equivalence PASS.
+Attach these checks to the execution evidence and result rules in the Evidence Protocol.

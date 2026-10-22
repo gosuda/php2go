@@ -9,7 +9,7 @@ Use this Skill to reduce specific, identified PHP risks while migration is in pr
 
 Do not build a general-purpose WAF or introduce broad attack signatures without feature evidence. Default traffic continues to the configured PHP HTTP upstream; only explicitly matched routes receive a defense or Go handling. This mode does not claim to fix every vulnerability or prove that a protected PHP feature is already migrated.
 
-Read [references/patch-plan.md](references/patch-plan.md) for the patch record, protocol checks, and lifecycle. The Skill supplies instructions, not an existing proxy binary or deployable configuration.
+Read [references/patch-plan.md](references/patch-plan.md) for the patch record, protocol checks, and lifecycle, and the [Evidence Protocol](../equivalence-check/references/evidence-protocol.md) for verdicts and security change records. The Skill supplies instructions, not an existing proxy binary or deployable configuration.
 
 ## Procedure
 
@@ -18,7 +18,7 @@ Read [references/patch-plan.md](references/patch-plan.md) for the patch record, 
 3. Build a small Go entry point using `net/http/httputil.ReverseProxy` and `Rewrite` on a compatible Go version. Keep upstreams configured server-side. Place route decisions before dispatch and send each request to one authoritative implementation. Keep request/response transformation narrowly scoped.
 4. Preserve the declared external origin, path/query representation, body, cookies, redirects, and authentication/session semantics. Define trusted forwarded-header handling, timeout/error behavior, streaming, and upgrade requirements. Check Go/PHP parsing differences rather than assuming transparent forwarding.
 5. Implement the patch and an explicit enable/disable mechanism with validated configuration. Do not duplicate writes, automatically retry uncertain writes against PHP, or shadow traffic with side effects. Do not bypass a security block on error or expiry.
-6. In isolation, compare direct PHP with proxy pass-through, then compare the active patch or Go route against the baseline using independent equivalent state. Verify the relevant attack is blocked or contained, legitimate boundary cases still work, and the configured PHP origin cannot bypass the defense. Include matched and unmatched routes, authentication, errors, and relevant effects. Keep intentional differences as `MISMATCH` linked to change records; do not edit baselines to claim PASS.
+6. Execute the Patch Plan's verification matrix, including attack containment, legitimate boundary inputs, and direct-origin bypass checks. Attach comparison results and proposed security changes using the Evidence Protocol.
 7. Prepare the implementation, tested configuration, operational checks, and rollback procedure for review. Do not change live ingress, DNS, certificates, or services merely because a Skill was invoked. Execute rollout only within the user's authorized deployment scope.
 8. Migrate the protected feature to Go with the permanent fix and explicit session/state compatibility. Verify both ordinary behavior and the attack regression without the temporary rule in isolation. After authorized cutover and rollback review, remove the redundant rule and the feature's unused PHP route/code/dependencies together. Retain shared PHP infrastructure until every consumer is migrated, and keep regression evidence and change history.
 
@@ -38,7 +38,7 @@ Track each feature separately; other features can remain on protected PHP. Repla
 
 - Prefer a request guard or explicit route replacement when it solves the problem. Response rewriting is appropriate only for a known bounded representation; it does not undo database writes or external effects already performed by PHP.
 - State when a proxy rule cannot enforce a property, such as authorization depending on unavailable database or session state. Do not substitute a regex or header check for that property. Record residual risk and required source/Go fixes rather than claiming complete mitigation.
-- A route handled by Go must preserve authentication and authorization, including PHP session compatibility where needed. Do not treat possession of a cookie as proof of identity. A patch needing database access follows SQL-first + `database/sql` with bound values and trusted identifier allowlists.
+- A route handled by Go must preserve authentication and authorization, including PHP session compatibility where needed. Do not treat possession of a cookie as proof of identity. For database access, read the [database policy](../sql-extract/references/database-policy.md).
 - Keep proxied PHP routes visible as unmigrated features. Proxy pass-through evidence is not evidence that those features have been implemented in Go.
 - Report unsupported protocol cases and unverified paths. A proxy must not conceal an unimplemented feature by returning generic success.
 

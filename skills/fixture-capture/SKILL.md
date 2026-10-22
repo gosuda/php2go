@@ -5,7 +5,7 @@ description: Capture reproducible request sequences, responses, and database, se
 
 # Reference Fixture Capture
 
-Take a Behavior Contract and an executable original application as inputs. If capture tools are unavailable or observation channels are unimplemented, disclose those limits rather than fabricating execution artifacts.
+Take a Behavior Contract and an executable original application as inputs. Read the [Evidence Protocol](../equivalence-check/references/evidence-protocol.md) for execution validity and evidence retention and the [Behavior Contract](../behavior-extract/references/behavior-contract.md) for baseline and normalization rules.
 
 ## Reproduction Prerequisites
 
@@ -13,7 +13,7 @@ Take a Behavior Contract and an executable original application as inputs. If ca
 2. Prepare sanitized test database, file tree, session store, and external service doubles as an initial snapshot and record its digest. Do not replay writes against production.
 3. Verify that workers, jobs, mail, queues, and external APIs use recording doubles in the isolated environment. Define completion conditions and timeouts for asynchronous effects. Failed initialization or dependencies outside the doubles invalidate the affected capture.
 4. Control clock/timezone/locale, RNG, sequence starting values, and ordering rules. For values that cannot be injected, retain raw values and observed relationships and link them to narrowly scoped contract comparison rules.
-5. Distinguish DDL/schema hashes from data snapshots. Record database version, charset/collation, sql_mode, timezone, triggers/procedures, storage engine, and candidate driver/connection settings. A schema file alone does not restore data or database runtime semantics. Include the authoritative table registry and its update behavior for dynamic board tables.
+5. Capture the schema/data artifacts and runtime profile specified by the [database policy](../sql-extract/references/database-policy.md), including dynamic registry state needed by the scenario. Record digests and restoration inputs in the manifest.
 
 ## Capture
 
@@ -28,4 +28,4 @@ Include the fixture ID, contract/source/tool versions and hashes, snapshot and r
 
 Capture synthetic data instead of authentication tokens and personal information. Restrict access to sensitive comparison artifacts and use safe references in reports. Disclose limits when redaction removes information needed for reproduction or comparison.
 
-Fixtures are evidence of the original application. Do not overwrite them to match Go output. Capture a new version when initial state, the contract, or the original source revision changes.
+Apply the Behavior Contract's baseline management rules when recapturing or revising fixtures.

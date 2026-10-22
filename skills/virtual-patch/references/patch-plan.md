@@ -2,6 +2,8 @@
 
 Use this record to derive temporary defenses from PHP analysis and retire them with the affected PHP implementation. It is a design checklist, not a general WAF specification, machine schema, or implemented configuration format.
 
+This document owns proxy requirements and lifecycle. [Evidence Protocol](../../equivalence-check/references/evidence-protocol.md) owns verdicts and security change records; [database policy](../../sql-extract/references/database-policy.md) owns DB access requirements.
+
 ## Required Record
 
 | Field | Required content |
@@ -19,7 +21,7 @@ Use this record to derive temporary defenses from PHP analysis and retire them w
 | Retirement dependency map | Rule → protected PHP feature → permanent Go fix → PHP routes/code/session/include/deployment consumers that must be retired or retained |
 | Evidence | Build/test results, pass-through and patched diffs, effect observations, limitations, rollback rehearsal |
 
-Default unmatched routing should preserve existing PHP service behavior through the proxy. Explicit security restrictions may intentionally differ and need their own change records. Do not describe a patch as approved or deployed without evidence.
+Default unmatched routing should preserve existing PHP service behavior through the proxy. Record intentional security restrictions using the Evidence Protocol's change record.
 
 ## HTTP and Trust Checks
 
@@ -38,17 +40,17 @@ Route each request once. Canary selection should keep a coherent user/session wo
 
 Do not mirror writes to PHP and Go against shared live state. A nominal read may update counters, sessions, or queues, so method alone does not prove safe shadowing. Use isolated captures and independent snapshots for differential execution.
 
-A new Go write path must keep the original schema and SQL semantics and use the project's `database/sql` rules. Proxy routing does not authorize schema redesign. Account for in-flight requests and state compatibility when switching routes back.
+Apply the database policy when introducing a Go write path. Account for in-flight requests and state compatibility when switching routes back.
 
 ## Verification Matrix
 
 1. **Direct PHP versus proxy with patch disabled:** Compare declared HTTP and state behavior from independent equivalent snapshots. List required transport/origin adaptations explicitly rather than treating them as arbitrary ignored fields.
-2. **Baseline versus active patch:** Exercise exact matches, near misses, unauthorized users, malformed inputs, body boundaries, and upstream failures. Record expected and unexpected differences separately. Intentional changes remain `MISMATCH` with a linked change record.
+2. **Baseline versus active patch:** Exercise exact matches, near misses, unauthorized users, malformed inputs, body boundaries, and upstream failures. Link expected and unexpected differences to the Evidence Protocol's result and change records.
 3. **Go route replacement:** Compare the actual Go implementation against direct PHP using the feature contract. Pass-through results do not count as Go implementation coverage.
 4. **Operational transitions:** Verify enable/disable behavior, invalid config rejection, expiry behavior, rollback and in-flight handling. Do not remove a security mitigation as an automatic fallback.
 5. **Defense and retirement:** Reproduce the specific finding only in authorized isolated fixtures. Check legitimate near-boundary inputs for false positives, relevant encoding/alternate-route bypasses, and origin reachability. Verify the Go replacement blocks the attack with the temporary rule disabled, then verify old PHP routes cannot be reached after retirement.
 
-The Agent may summarize evidence, but executable comparisons determine equivalence results. Missing capture channels, protocol support, or scenarios retain `UNSUPPORTED` or `NOT COVERED` as appropriate.
+Apply the Evidence Protocol to these observations, including missing channels or scenarios.
 
 ## Expiry and Removal
 

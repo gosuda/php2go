@@ -5,27 +5,23 @@ description: Implement Go code that preserves observable PHP behavior using Beha
 
 # Go Implementation
 
-Implement feature by feature using the original source, feature inventory, contracts, and captured fixtures. Respect the target Go project's structure and existing dependency choices.
+Implement feature by feature from the original source, feature inventory, contracts, fixtures, and SQL extraction artifacts. Respect the target Go project's structure.
 
-## Implementation Criteria
+Read the [database policy](../sql-extract/references/database-policy.md) for DB implementation, [contract baseline rules](../behavior-extract/references/behavior-contract.md#baseline-management) before proposing expectation changes, and [Evidence Protocol](../equivalence-check/references/evidence-protocol.md) for comparison results and security changes. These documents own the shared rules; this Skill defines implementation work.
 
-- Build the initial database layer with SQL-first + `database/sql` and a pinned driver. Preserve existing schema, table names, and SQL semantics; defer optimization and schema redesign until equivalence is established. Do not require sqlc or introduce an ORM. Consider sqlx only when repetitive result mapping creates a concrete need, with separate verification.
-- Keep static queries in `.sql` files available to deployed builds and dynamic construction in focused Go database access code. Use context-aware `QueryContext`, `QueryRowContext`, and `ExecContext` with bound values. Map `Scan` targets, NULL, numeric/time conversions, `sql.ErrNoRows`, affected rows, and generated IDs explicitly; close rows and check `rows.Err()`.
-- Build dynamic conditions from fixed SQL fragments and argument lists. Resolve table/column names and sort direction through trusted validated allowlists; never concatenate request data. Support dynamic board tables through the authoritative server-managed registry, including authorized creation and registry refresh. Do not require per-table code generation or mark dynamic queries unsupported merely because sqlc cannot represent them.
-- Keep transactional statements on the same `*sql.Tx` and preserve order, isolation, rollback, and connection-local semantics. Infrastructure handles connection pools and lifecycle; schema application, fixture restoration, and observation tooling remain separate.
-- Match request parsing, routing/rewrites, status/headers/body, errors, and redirects to the contract. Do not assume Go defaults match PHP missing/null/empty values, loose comparisons, truthiness, numeric strings, arrays, or encoding semantics.
-- Preserve transactions/rollback, NULL/types, sorting and tie handling, auto-increment IDs, and reference relationships. Do not rely on driver result order or default timezone.
-- Preserve observable session IDs, cookie attributes, authentication/authorization, CSRF behavior, file paths/permissions, and external effects. Specify compatibility boundaries with existing stores when needed.
-- Allow injection of clock/RNG/external service dependencies without inserting verification constants or fixture-specific response branches into production service code.
-- Implement success, error, and authorization paths together. Explicitly identify features outside the initial scope instead of disguising them with success responses.
+## Implementation Tasks
+
+- Map request parsing, routing/rewrites, status/headers/body, errors, and redirects to the feature contract. Investigate PHP/Go differences in missing/null/empty values, loose comparison, truthiness, numeric strings, arrays, and encoding at their actual call sites.
+- Implement extracted query/access plans under the database policy and attach original-to-Go function mappings to Migration Notes. Resolve missing or ambiguous extraction artifacts before implementing the affected query.
+- Implement sessions, authentication/authorization, CSRF, cookie behavior, files, and external service adapters. Document compatibility boundaries with existing stores.
+- Add injection points for clock/RNG/external dependencies needed by the scenario environment, keeping fixture-specific behavior out of service code.
+- Implement success, error, and authorization paths for the chosen feature boundary and identify remaining paths.
 
 ## Revision Loop
 
-1. Run Go builds/tests for a small feature boundary. Verify static SQL availability, placeholder arguments, identifier allowlists, result mapping, and transaction behavior with the pinned driver and recorded database settings. Disclose unavailable checks without claiming success.
-2. Compare against independent clones of the same snapshot using an executable verifier when available. Otherwise report verification as not run.
-3. Narrow diffs to input interpretation, responses, state transitions, or environment differences, then revise Go. Do not erase differences by changing the original or expected values.
-4. Rerun affected scenarios and related regression paths. If the same cause repeats without progress, document missing information and unresolved differences and continue other implementable work.
+1. Build and test the feature and run the database policy's relevant checks for any DB work.
+2. Execute the available verifier for affected scenarios and collect its output under the Evidence Protocol.
+3. Trace diffs to input interpretation, response generation, state transitions, or environment configuration and revise the candidate. Route proposed baseline or security changes through their owning references.
+4. Rerun affected and related regression scenarios. If the same cause repeats without progress, record the missing information and unresolved difference and continue other implementable work.
 
-Propose security changes to unsafe original behavior separately with evidence and impact scope. Implement within existing approval where available, and record approved changes separately from comparison results.
-
-Deliver Go source, execution/configuration instructions, PHP-to-Go feature mappings, build/test results, execution evidence references, unresolved differences, and unverified areas. Neither successful compilation nor AI code review establishes equivalence PASS.
+Deliver Go source, execution/configuration instructions, feature/function mappings, build/test evidence, comparison references, and unresolved implementation or verification work.

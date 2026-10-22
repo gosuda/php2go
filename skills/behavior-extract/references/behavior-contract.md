@@ -2,6 +2,8 @@
 
 This is a draft format for human review. No machine-validation schema or execution tool is provided yet. Assertion names in the YAML example are identifiers for future adapters to implement, not currently executable commands.
 
+This document owns contract structure, comparison declarations, and baseline management. Execution verdicts and security change records belong to the [Evidence Protocol](../../equivalence-check/references/evidence-protocol.md).
+
 ## Required Information
 
 | Field | Contents |
@@ -69,6 +71,14 @@ normalization: []
 coverage_gaps:
   - Other pages, authenticated users, and invalid page values have no scenarios yet.
 ```
+
+## Baseline Management
+
+Use the contract and original execution together as the baseline. If they conflict, record the conflict and resolve it before comparison can establish PASS. Distinguish source inferences from executed observations in contract provenance.
+
+Do not change contracts or fixtures because the candidate fails. A baseline change needs original evidence, rationale, a new revision, and affected scenarios; recapture when the original revision or initial state changes. Preserve earlier versions for traceability.
+
+Route intentional security differences through the Evidence Protocol's security change record instead of silently folding them into baseline expectations. A proposed change remains a proposal until approval evidence exists.
 
 ## Comparison Semantics
 

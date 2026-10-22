@@ -2,6 +2,8 @@
 
 **Migrate PHP to Go with AI, without breaking existing behavior.**
 
+![php2go](image.png)
+
 php2go는 오래된 PHP 서비스를 Go로 마이그레이션하기 위한 **Agent Skills 프로젝트**입니다.
 
 AI로 코드 변환을 가속하면서도, 기존 PHP와 Go를 같은 조건에서 실행해 실제 동작이 일치하는지 검증하는 것을 목표로 합니다.
