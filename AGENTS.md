@@ -2,7 +2,7 @@
 
 ## Purpose and Current Scope
 
-php2go provides nine task-specific Agent Skills for PHP-to-Go migration. They are a toolbox selected per feature, not nine mandatory stages. `virtual-patch` is optional and applies only when an identified risk needs interim mitigation. Skills guide the Agent; executable tools determine equivalence.
+php2go provides ten Agent Skills for PHP-to-Go migration: nine task-specific Skills and `migration-orchestrator`, which selects among them for a feature and records state. They are a toolbox selected per feature, not ten mandatory stages. `virtual-patch` is optional and applies only when an identified risk needs interim mitigation. Skills guide the Agent; executable tools determine equivalence.
 
 The repository is a Skills-first collection of workflows, policy/format references, and a standalone Skill packager. It does not require a repository-owned verifier CLI, capture engine, proxy product, or migration runtime.
 
@@ -22,6 +22,9 @@ Edit each rule in its owning document. Other documents should link to the owner 
 | Proxy capability planning, production readiness, patch lifecycle and PHP retirement | [Virtual Patch Plan](skills/virtual-patch/references/patch-plan.md) |
 | Version-dependent PHP runtime semantics that diverge from Go defaults, with detection patterns and boundary inputs | [PHP semantics catalog](skills/php-edge-cases/SKILL.md) |
 | Placement, consolidation, scope, and evidence of PHP compatibility code in Go | [PHP compatibility boundary](skills/go-migrate/SKILL.md#php-compatibility-boundary) |
+| Target-project artifact layout, identifier patterns, Skill handoffs, per-feature state record | [Workspace convention](skills/migration-orchestrator/references/workspace-convention.md), [State record](skills/migration-orchestrator/references/state-record.md) |
+| Shape of the Feature Inventory and SQL Inventory | [Inventory format](skills/php-analyze/references/inventory-format.md) |
+| Fixture snapshot layout and Capture Manifest fields | [Capture manifest](skills/fixture-capture/references/capture-manifest.md) |
 
 Read the relevant owner before work in that area. These references are instructions and design formats, not implemented schemas or verification tools. If a procedure conflicts with its owner, correct the procedure instead of introducing a second policy.
 
@@ -46,6 +49,7 @@ Read the relevant owner before work in that area. These references are instructi
 | [security-review](skills/security-review/SKILL.md) | Review risks and proposed fixes | Security Report / Change Records |
 | [virtual-patch](skills/virtual-patch/SKILL.md) | Temporarily mitigate an identified risk when interim protection is needed | Patch Plan / Target-specific proxy source or configuration / Retirement evidence |
 | [php-edge-cases](skills/php-edge-cases/SKILL.md) | Find and confirm PHP semantics that diverge from Go on the reference runtime | Divergence findings / Boundary scenarios / Probe outputs |
+| [migration-orchestrator](skills/migration-orchestrator/SKILL.md) | Select the Skills a feature still needs, check artifact validity, and record state | State record / Next-task report |
 
 Choose one feature or change, inspect its existing artifacts, and invoke only the Skills needed to close the actual gaps. Apply [artifact reuse rules](skills/equivalence-check/references/evidence-protocol.md#artifact-reuse) before repeating work. Reading a required policy does not mean invoking its owning Skill.
 
@@ -53,7 +57,7 @@ Choose one feature or change, inspect its existing artifacts, and invoke only th
 - Use `sql-extract` for missing or changed database access plans; skip it for features without database work. Recapture only fixtures invalidated by relevant changes or missing scenarios.
 - Use `security-review` for relevant risks. Invoke `virtual-patch` only when an identified risk needs temporary mitigation; ordinary feature migration does not invoke it. Preserve all target application features, treating missing proxy capabilities as implementation tasks rather than permanent exclusions.
 
-Record the selected feature, reused artifact IDs, invalidated dependencies, and next required task. A change to shared dependencies can affect multiple features; use the Evidence Protocol to determine the verification scope. Consult each Skill for its own procedure.
+Record the selected feature, reused artifact IDs, invalidated dependencies, and next required task; `migration-orchestrator` performs this selection and keeps the [state record](skills/migration-orchestrator/references/state-record.md). A change to shared dependencies can affect multiple features; use the Evidence Protocol to determine the verification scope. Consult each Skill for its own procedure.
 
 ## Standalone Skill Packaging
 
@@ -67,7 +71,7 @@ node scripts/package-skill.mjs go-migrate dist/go-migrate
 
 The packager copies the selected Skill and its transitive local document dependencies, rewriting links to stay inside the package. Install the resulting folder in the host Agent's discovery path. It does not include sibling Skill entrypoints unless explicitly referenced, invoke Skills, or access the network. Existing destinations are rejected.
 
-Treat packaged references as generated distribution artifacts. Change the canonical source and regenerate packages; do not edit or commit distribution copies. `dist/` is ignored. Apply the same packaging process to any of the nine Skills.
+Treat packaged references as generated distribution artifacts. Change the canonical source and regenerate packages; do not edit or commit distribution copies. `dist/` is ignored. Apply the same packaging process to any Skill.
 
 ## Verification and Reporting
 

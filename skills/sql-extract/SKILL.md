@@ -1,6 +1,6 @@
 ---
 name: sql-extract
-description: Extract PHP SQL and existing schemas, separate static queries from safe dynamic construction, and define explicit database/sql result mapping for migration to Go.
+description: Extract PHP SQL and existing schemas, separate static queries from safe dynamic construction, and define explicit database/sql result mapping for migration to Go. Use when a feature with database access lacks a valid access plan.
 ---
 
 # SQL Extraction and Database Access
@@ -20,6 +20,6 @@ Apply the Evidence Protocol's artifact reuse rules to the selected feature's SQL
 
 ## Deliverables
 
-- SQL Inventory mapping original location/branch to feature/contract, schema/query or construction function, mapping plan, and scenario.
+- SQL Inventory mapping original location/branch to feature/contract, schema/query or construction function, mapping plan, and scenario. Complete the `access_plan` of each call site in the [inventory format](../php-analyze/references/inventory-format.md#sql-inventory).
 - Schema/runtime profile, static SQL files, dynamic construction and loading plans, driver configuration, and build/integration evidence.
 - Unresolved branches, extraction gaps, proposed behavior changes, and follow-up work.

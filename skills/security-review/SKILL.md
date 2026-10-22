@@ -1,6 +1,6 @@
 ---
 name: security-review
-description: Review unsafe original behavior and vulnerabilities introduced during PHP-to-Go migration, tracking approved security changes separately from functional equivalence results.
+description: Review unsafe original behavior and vulnerabilities introduced during PHP-to-Go migration, tracking approved security changes separately from functional equivalence results. Use when auditing injection, XSS, CSRF, or authorization risks or preparing a security change record.
 ---
 
 # Migration Security Review
@@ -23,6 +23,6 @@ Review original and candidate risks within actual feature boundaries. Read the [
 
 ## Deliverables
 
-Include finding IDs, classification (original/new/unconfirmed), impact and severity rationale, source/execution evidence, proposals/actions, and residual risks in the Security Report. Attach security change records using the referenced format rather than defining another approval or verdict format here.
+Include finding IDs, classification (original/new/unconfirmed), impact and severity rationale, source/execution evidence, proposals/actions, and residual risks in the Security Report. Attach security change records using the referenced format rather than defining another approval or verdict format here. Change IDs and file locations follow the [workspace convention](../migration-orchestrator/references/workspace-convention.md).
 
 A finding of no new vulnerabilities applies only within the review scope. Security review PASS does not establish functional equivalence PASS, and functional equivalence PASS does not prove security.

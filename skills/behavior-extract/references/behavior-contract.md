@@ -29,7 +29,7 @@ reference:
   evidence: [bbs/board.php]
 initial_state:
   snapshot: board-public-page2-v1
-  manifest: fixtures/board-public-page2-v1/manifest.json
+  manifest: migration/fixtures/board-public-page2-v1/manifest.json
   runtime_profile: php-reference-v1
   clock: fixed-in-fixture
   randomness: seeded-in-fixture
