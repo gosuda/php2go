@@ -23,5 +23,6 @@ Executable verification tools determine verdicts. The Agent prepares execution, 
 - Record `UNSUPPORTED` for required channels or assertions the tool cannot support and `NOT COVERED` for insufficient execution evidence. If no verifier exists, report unexecuted scenarios and the missing tool without generating PASS.
 - Link approved security changes in separate records while retaining actual diffs and `MISMATCH` results.
 - Do not infer whole-feature equivalence from partial success. Include inventory features with no scenarios in the report.
+- For a proxy migration, compare direct PHP with pass-through separately from patched or Go-handled routes, using independent equivalent state. Do not count forwarded PHP behavior as Go implementation coverage or replay live writes to both backends. Link intentional patch differences to change records while retaining `MISMATCH`.
 
 When execution is impossible, identify missing prerequisites and adapters concretely. Label manual comparisons and AI reviews as advisory observations rather than evidence of deterministic executable verification.

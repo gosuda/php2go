@@ -4,7 +4,7 @@
 
 php2go provides Agent Skills for migrating PHP applications to Go while preserving observable behavior. Skills define the workflow; executable verification tools determine equivalence from reference PHP and candidate Go executions.
 
-The repository currently contains seven Skills and draft contract, evidence, and SQL policy references. It does not yet implement the `equiv` CLI, capture tools, automatic SQL extraction, target application database access code, database/session adapters, or machine-validation schemas. Do not describe planned capabilities as available.
+The repository currently contains eight Skills: seven core migration Skills and an analysis-driven `virtual-patch` Skill, with draft contract, evidence, SQL, and patch references. It does not yet implement the `equiv` CLI, capture tools, automatic SQL extraction, target application database access code, a proxy binary, database/session adapters, or machine-validation schemas. Do not describe planned capabilities as available.
 
 Keep initial work focused on Skills and a small independent verifier. A general PHP-to-Go compiler, custom IR, or complete PHP compatibility runtime is outside the initial scope. Reuse existing analysis tools where appropriate; do not add a conversion engine merely to complete a Skill.
 
@@ -27,8 +27,9 @@ Keep initial work focused on Skills and a small independent verifier. A general 
 | [go-migrate](skills/go-migrate/SKILL.md) | Implement and revise Go against contracts | Go source / Migration Notes |
 | [equivalence-check](skills/equivalence-check/SKILL.md) | Compare executable observations and report coverage | Diff / Evidence Report |
 | [security-review](skills/security-review/SKILL.md) | Review original/new risks and track approved changes | Security Report / Change Records |
+| [virtual-patch](skills/virtual-patch/SKILL.md) | Derive temporary proxy defenses from PHP analysis and retire them with replaced PHP features | Patch Plan / Finding-to-rule map / Proxy implementation / Verification and retirement evidence |
 
-For Agent use, copy or link the required Skill folders, including their references, into the host Agent's discovery path. Installation paths and discovery depend on the host Agent. Provide all seven for the complete workflow.
+For Agent use, copy or link the required Skill folders, including their references, into the host Agent's discovery path. Installation paths and discovery depend on the host Agent. Provide the seven core Skills for the full migration workflow; use `virtual-patch` when analyzed PHP risks need temporary protection during staged migration.
 
 Example task:
 
@@ -58,6 +59,14 @@ Read the [Behavior Contract draft](skills/behavior-extract/references/behavior-c
 - Preserve statement order, transaction boundaries, isolation, rollback, and connection-local behavior. Run transactional queries through the same `*sql.Tx`; do not mix `*sql.DB` calls into that transaction. DDL application, fixture restoration, and observation tools remain separate from ordinary application queries.
 - Do not require sqlc or introduce an ORM in the initial migration. Consider sqlx only when repetitive mapping demonstrates a concrete need and verify its runtime mapping semantics. Do not mix database libraries by default. Lack of sqlc support is not a reason to mark a dynamic query unsupported.
 - Parameterization and input validation are separate changes. Do not add `LIMIT 1`, integer parsing, or new HTTP 400 responses without checking original semantics. Track intentional security differences separately.
+
+## Analysis-Driven Virtual Patches
+
+Use `virtual-patch` to connect PHP analysis and security findings to feature-specific temporary Go proxy rules. Do not build a general WAF. Default requests go to a configured PHP HTTP upstream; explicitly matched routes receive evidence-backed defenses or verified Go handling. Define ownership, matching, expected changes, review/expiry behavior, rollback, and permanent removal criteria before rollout.
+
+Progress feature by feature: analyze PHP → derive and verify a temporary defense → run protected PHP while implementing Go → verify the permanent fix → cut over and retire the rule plus unused PHP routes/code/dependencies. Verify attack regressions without the rule before removal. Keep shared PHP dependencies and protection needed by remaining features or rollback paths; remove the final PHP runtime/upstream only after no consumers remain.
+
+Verify direct PHP versus proxy pass-through separately from active patch or Go route behavior. Preserve intentional differences as `MISMATCH` with change records. Do not count proxied PHP features as migrated Go coverage. Keep forwarded-header trust, session compatibility, parsing differences, and response rewriting explicit. Never duplicate writes, fallback uncertain writes to another backend, or silently remove security protection on error/expiry. This Skill does not itself authorize live ingress or service changes.
 
 ## Equivalence Invariants
 
