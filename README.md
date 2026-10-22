@@ -1,8 +1,9 @@
+![php2go](image.png)
+
 # php2go
 
 **Migrate PHP to Go with AI, without breaking existing behavior.**
 
-![php2go](image.png)
 
 php2go는 오래된 PHP 서비스를 Go로 마이그레이션하기 위한 **Agent Skills 프로젝트**입니다.
 
