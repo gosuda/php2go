@@ -52,7 +52,7 @@ php2go는 다음 과정을 지향합니다.
 
 ## Current status
 
-현재 PHP 분석, 계약 추출, fixture 수집, SQL 추출, Go 구현, 동등성 검증, 보안 검토를 위한 7개 기본 Skill과 [virtual-patch Skill](skills/virtual-patch/SKILL.md), 총 **8개 Agent Skill**을 제공합니다.
+현재 PHP 분석, 계약 추출, fixture 수집, SQL 추출, Go 구현, 동등성 검증, 보안 검토를 위한 7개 기본 Skill과 [virtual-patch Skill](skills/virtual-patch/SKILL.md), PHP와 Go의 동작 차이를 PHP 5.x–8.x 버전별로 정리한 [php-edge-cases Skill](skills/php-edge-cases/SKILL.md), 총 **9개 Agent Skill**을 제공합니다. php-edge-cases에는 대상 PHP 런타임에서 직접 실행해 확인하는 probe 스크립트가 포함되어 있습니다.
 
 별도의 검증 CLI나 공통 프록시 제품은 필수 구성 요소가 아닙니다. 실제 마이그레이션에서 반복되는 코드가 확인되면 필요한 부분만 공통 도구로 추출합니다. 배포용 Skill 패키징 스크립트는 제공하며, 대상 애플리케이션의 구현과 검증은 Agent가 수행합니다.
 
